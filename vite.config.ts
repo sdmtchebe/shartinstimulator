@@ -4,8 +4,8 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // Set base to repo name for GitHub Pages — change "martin3" to your actual repo name
-  base: "/martin3/",
+  // Updated base to match your actual GitHub repository name
+  base: "/shartinstimulator/",
   server: {
     host: "::",
     port: 8080,
