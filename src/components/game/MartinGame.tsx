@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SCENES, NPC_DEFS, MOLDY_FOODS, STREET_FOODS, FIGHTERS, CHUD_ACTIVITIES, ALL_QUESTS, DAY_LENGTH_SECONDS, DAY_START_HOUR, DAY_END_HOUR, PLAYER_SPEED, PLAYER_RADIUS, CALL_SCRIPTS, DAILY_EVENTS } from "@/game/world";
-import type { Direction, GameStats, Interactable, MartinState, NpcRuntime, SceneId } from "@/game/types";
+import type { Direction, GameStats, Interactable, MartinState, NpcDef, NpcRuntime, SceneId } from "@/game/types";
 import { clamp, dist, randomChoice, randomInt } from "@/lib/utils";
 import { sound } from "@/game/sound";
 import HUD from "./HUD";
@@ -79,7 +79,7 @@ function initialStats(): GameStats {
     dailyEvent: null, secretsFound: [],
     questsCompleted: ["wake-up"], scenesVisited: ["home"],
     tutorialStep: 0,
-    buttplugQuestStep: 0, hasHummus: false, hasButtplug: false, hasTicket: false,
+    buttplugQuestStep: 0, hasHummus: false, hasButtplug: false, hellDefeated: false, hasTicket: false,
   };
 }
 
@@ -91,7 +91,7 @@ function loadSaveData(): { stats: GameStats; martin: MartinState; npcs: NpcRunti
     const scene = data.martin?.scene ?? "home";
     const spawnPos = SCENES[scene]?.spawnPos ?? { x: 420, y: 580 };
     return {
-      stats: { ...initialStats(), ...data.stats },
+      stats: { ...initialStats(), ...data.stats, hellDefeated: data.stats?.hellDefeated ?? false },
       martin: { scene, x: spawnPos.x, y: spawnPos.y, dir: "down", walking: false, walkPhase: 0, hp: data.martin?.hp ?? 100, hpMax: data.martin?.hpMax ?? 100 },
       npcs: mergeNpcs(data.npcs),
     };
@@ -132,6 +132,13 @@ export default function MartinGame() {
   const shadowChudCdRef = useRef(0); // cooldown between bites
   const nightWarningShownRef = useRef(false);
   const ballAnimRef = useRef<{ t: number; made: boolean } | null>(null); // basketball arc anim
+  const hellBossRef = useRef<{ hp: number; hpMax: number; x: number; y: number; punchCd: number; barrageCd: number; walkPhase: number; dir: Direction } | null>(null);
+  const hellProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; damage: number; active: boolean; emoji: string }[]>([]);
+  const hellPickupsRef = useRef<{ x: number; y: number; type: "gun" | "food"; active: boolean; timer: number; lifetime: number }[]>([]);
+  const playerGunRef = useRef<{ active: boolean; ammo: number; timer: number } | null>(null);
+  const punchCdRef = useRef(0);
+  const gunSpawnCdRef = useRef(0);
+  const foodSpawnCdRef = useRef(0);
   const flightAnimRef = useRef<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null); flightAnimRef.current = flightAnim;
   const [, forceUpdate] = useState(0);
 
@@ -167,7 +174,7 @@ export default function MartinGame() {
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        statsRef.current = { ...initialStats(), ...data.stats };
+        statsRef.current = { ...initialStats(), ...data.stats, hellDefeated: data.stats?.hellDefeated ?? false };
         const scene = data.martin?.scene ?? "home";
         const spawnPos = SCENES[scene]?.spawnPos ?? { x: 420, y: 580 };
         martinRef.current = { scene, x: spawnPos.x, y: spawnPos.y, dir: "down", walking: false, walkPhase: 0, hp: data.martin?.hp ?? 100, hpMax: data.martin?.hpMax ?? 100 };
@@ -296,6 +303,10 @@ export default function MartinGame() {
     moveToScene("home", 420, 580);
     shadowChudRef.current = null;
     nightWarningShownRef.current = false;
+    hellBossRef.current = null;
+    hellProjectilesRef.current = [];
+    hellPickupsRef.current = [];
+    playerGunRef.current = null;
     npcsRef.current.forEach((n) => {
       if (Math.random() < 0.6) n.transformed = false;
       n.scene = n.def.homeScene;
@@ -959,6 +970,36 @@ export default function MartinGame() {
     }
 
     if (npc.def.id === "moggayla-bt") {
+      const m = martinRef.current;
+      const stats = statsRef.current;
+      if (m.scene === "hell") {
+        if (stats.hellDefeated) {
+          setDialog({
+            title: "MoGgayla", emoji: "💕",
+            body: "Oh my gosh Martin! You defeated Charle! You're so brave! I love you so much!",
+            choices: [
+              {
+                label: "Return to hometown with me",
+                onSelect: () => {
+                  npc.scene = "boutique";
+                  npc.x = npc.def.baseX;
+                  npc.y = npc.def.baseY;
+                  moveToScene("outside", 400, 450);
+                  setDialog(null);
+                },
+              },
+              { label: "Stay here", onSelect: () => setDialog(null) },
+            ],
+          });
+        } else {
+          setDialog({
+            title: "MoGgayla", emoji: "💕",
+            body: "Martin... this is scary. Please protect me.",
+            choices: [{ label: "I will protect you", onSelect: () => setDialog(null) }],
+          });
+        }
+        return;
+      }
       const step = statsRef.current.buttplugQuestStep;
       if (step === 0) {
         setDialog({
@@ -1002,11 +1043,19 @@ export default function MartinGame() {
         });
         return;
       }
-      setDialog({
-        title: "MoGgayla", emoji: "💕",
-        body: npc.def.description,
-        choices: [{ label: "Say hi", onSelect: () => { showToast("MoGgayla: 'My hero Martin!'"); setDialog(null); } }],
-      });
+      const choices: DialogChoice[] = [{ label: "Say hi", onSelect: () => { showToast("MoGgayla: 'My hero Martin!'"); setDialog(null); } }];
+      if (stats.hellDefeated) {
+        choices.push({
+          label: "Come with me to hell",
+          onSelect: () => {
+            npc.scene = "hell";
+            npc.x = 300;
+            npc.y = 300;
+            startPlaneFlight();
+          },
+        });
+      }
+      setDialog({ title: "MoGgayla", emoji: "💕", body: npc.def.description, choices });
       return;
     }
 
@@ -1224,6 +1273,58 @@ export default function MartinGame() {
     );
     if (nearbyNpc) { interactWithNpc(nearbyNpc); return; }
 
+    if (m.scene === "hell") {
+      for (const p of hellPickupsRef.current) {
+        if (!p.active) continue;
+        if (dist(m.x, m.y, p.x, p.y) < 60) {
+          if (p.type === "gun") {
+            playerGunRef.current = { active: true, ammo: 10, timer: 15000 };
+            p.active = false;
+            sound.play("select");
+            showToast("Picked up a gun! 10 ammo");
+          } else {
+            martinRef.current.hp = Math.min(martinRef.current.hpMax, martinRef.current.hp + 15);
+            p.active = false;
+            sound.play("eat");
+            showToast("Ate hell food! +15 HP");
+          }
+          return;
+        }
+      }
+      const boss = hellBossRef.current;
+      if (boss && dist(m.x, m.y, boss.x, boss.y) < 80) {
+        if (punchCdRef.current <= 0) {
+          const dmg = randomInt(8, 15);
+          boss.hp -= dmg;
+          punchCdRef.current = 500;
+          statsRef.current.shake = 5;
+          sound.play("punch");
+          showToast(`You punched Charle for ${dmg} dmg!`);
+          return;
+        }
+      }
+      const gun = playerGunRef.current;
+      if (gun && gun.active && gun.ammo > 0) {
+        if (boss) {
+          const angle = Math.atan2(boss.y - m.y, boss.x - m.x);
+          hellProjectilesRef.current.push({
+            x: m.x,
+            y: m.y,
+            vx: Math.cos(angle) * 8,
+            vy: Math.sin(angle) * 8,
+            damage: 25,
+            active: true,
+            emoji: "💨",
+          });
+          gun.ammo -= 1;
+          if (gun.ammo <= 0) playerGunRef.current = null;
+          sound.play("swish");
+          showToast(`Gun shot! ${gun.ammo} ammo left`);
+          return;
+        }
+      }
+    }
+
     for (const d of scene.doors) {
       if (m.x > d.x - 30 && m.x < d.x + d.w + 30 && m.y > d.y - 30 && m.y < d.y + d.h + 30) {
         moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y); return;
@@ -1350,7 +1451,122 @@ export default function MartinGame() {
       const dt = Math.min(40, ts - lastTs); lastTs = ts;
       const dtSec = dt / 1000;
       const stats = statsRef.current; const m = martinRef.current;
+      const scene = SCENES[m.scene];
       const dialogActive = !!dialogRef.current || !!fightRef.current || showPhoneRef.current || !!flightAnimRef.current;
+      punchCdRef.current -= dt;
+
+      if (m.scene === "hell" && !stats.hellDefeated) {
+        if (!hellBossRef.current) {
+          hellBossRef.current = { hp: 500, hpMax: 500, x: 1000, y: 750, punchCd: 0, barrageCd: 0, walkPhase: 0, dir: "down" };
+        }
+        const boss = hellBossRef.current;
+        const bdx = m.x - boss.x;
+        const bdy = m.y - boss.y;
+        const bd = Math.hypot(bdx, bdy);
+        if (bd > 100) {
+          const bsp = 0.8 * (dt / 16);
+          boss.x += (bdx / bd) * bsp;
+          boss.y += (bdy / bd) * bsp;
+        }
+        if (bd > 0) {
+          if (Math.abs(bdx) > Math.abs(bdy)) boss.dir = bdx > 0 ? "right" : "left";
+          else boss.dir = bdy > 0 ? "down" : "up";
+        }
+        boss.walkPhase += dt / 200;
+        if (bd < 120 && boss.punchCd <= 0) {
+          martinRef.current.hp = Math.max(0, martinRef.current.hp - 20);
+          boss.punchCd = 1500;
+          stats.shake = 8;
+          sound.play("punch");
+          showToast("Charle punches you! -20 HP");
+        }
+        if (bd > 150 && bd < 400 && boss.barrageCd <= 0) {
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            hellProjectilesRef.current.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * 3, vy: Math.sin(angle) * 3, damage: 15, active: true, emoji: "🏀" });
+          }
+          boss.barrageCd = 3000;
+          sound.play("swish");
+          showToast("Charle unleashes a basketball barrage!");
+        }
+        boss.punchCd -= dt;
+        boss.barrageCd -= dt;
+        for (const proj of hellProjectilesRef.current) {
+          if (!proj.active) continue;
+          proj.x += proj.vx * (dt / 16);
+          proj.y += proj.vy * (dt / 16);
+          if (proj.emoji === "💨") {
+            if (boss) {
+              const bdist = dist(proj.x, proj.y, boss.x, boss.y);
+              if (bdist < 85) {
+                boss.hp -= proj.damage;
+                proj.active = false;
+                stats.shake = 3;
+                sound.play("punch");
+                showToast(`Bullet hits Charle! -${proj.damage} dmg`);
+              }
+            }
+          } else {
+            const pd = dist(proj.x, proj.y, m.x, m.y);
+            if (pd < 45) {
+              martinRef.current.hp = Math.max(0, martinRef.current.hp - proj.damage);
+              proj.active = false;
+              stats.shake = 6;
+              sound.play("cousinChomp");
+              showToast(`Basketball hit! -${proj.damage} HP`);
+            }
+          }
+          if (proj.x < 0 || proj.x > scene.width || proj.y < 0 || proj.y > scene.height) {
+            proj.active = false;
+          }
+        }
+        hellProjectilesRef.current = hellProjectilesRef.current.filter((p) => p.active);
+        if (gunSpawnCdRef.current <= 0) {
+          hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "gun", active: true, timer: 0, lifetime: 15000 });
+          gunSpawnCdRef.current = 8000 + Math.random() * 4000;
+        }
+        if (foodSpawnCdRef.current <= 0) {
+          hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "food", active: true, timer: 0, lifetime: 20000 });
+          foodSpawnCdRef.current = 10000 + Math.random() * 5000;
+        }
+        gunSpawnCdRef.current -= dt;
+        foodSpawnCdRef.current -= dt;
+        for (const p of hellPickupsRef.current) {
+          if (!p.active) continue;
+          p.timer += dt;
+          if (p.timer >= p.lifetime) p.active = false;
+        }
+        hellPickupsRef.current = hellPickupsRef.current.filter((p) => p.active);
+        if (playerGunRef.current) {
+          playerGunRef.current.timer -= dt;
+          if (playerGunRef.current.timer <= 0) {
+            playerGunRef.current = null;
+            showToast("Gun expired!");
+          }
+        }
+        if (boss.hp <= 0) {
+          stats.hellDefeated = true;
+          showToast("CHARLE THE COLOSSUS HAS FALLEN!");
+          hellBossRef.current = null;
+          hellProjectilesRef.current = [];
+          hellPickupsRef.current = [];
+          playerGunRef.current = null;
+        }
+        if (martinRef.current.hp <= 0 && !stats.dead) {
+          martinRef.current.hp = 50;
+          martinRef.current.scene = "airport";
+          martinRef.current.x = 500;
+          martinRef.current.y = 580;
+          showToast("You were crushed by Charle. The airport gives you a free return flight.");
+          stats.shake = 10;
+          flightAnimRef.current = null;
+          setFlightAnim(null);
+          hellBossRef.current = null;
+          hellProjectilesRef.current = [];
+          hellPickupsRef.current = [];
+          playerGunRef.current = null;
+        }
+      }
 
       if (!stats.dead && !dialogActive) {
         let dx = 0, dy = 0;
@@ -1361,8 +1577,7 @@ export default function MartinGame() {
         const len = Math.hypot(dx, dy);
         if (len > 0) {
           dx /= len; dy /= len;
-          // Movement slows down as chud increases
-          const chudSlowdown = 1 - (stats.chud / 100) * 0.7; // Up to 70% slower at 100% chud
+          const chudSlowdown = m.scene === "hell" ? 1 : 1 - (stats.chud / 100) * 0.7; // Up to 70% slower at 100% chud
           const speed = PLAYER_SPEED * chudSlowdown * (dt / 16);
           const newX = m.x + dx * speed;
           const newY = m.y + dy * speed;
@@ -1378,7 +1593,6 @@ export default function MartinGame() {
           m.walking = false;
           stats.shake *= 0.85;
         }
-        const scene = SCENES[m.scene];
         m.x = clamp(m.x, 30 + PLAYER_RADIUS, scene.width - 30 - PLAYER_RADIUS);
         m.y = clamp(m.y, 30 + PLAYER_RADIUS, scene.height - 30 - PLAYER_RADIUS);
       } else {
@@ -1526,6 +1740,14 @@ export default function MartinGame() {
       if (shadowChudCdRef.current > 0) shadowChudCdRef.current -= dt;
 
       // NPC AI
+      if (m.scene === "hell" && stats.hellDefeated) {
+        const moggaylaBt = npcsRef.current.find((n) => n.def.id === "moggayla-bt");
+        if (moggaylaBt && moggaylaBt.scene !== "hell") {
+          moggaylaBt.scene = "hell";
+          moggaylaBt.x = 300;
+          moggaylaBt.y = 300;
+        }
+      }
       const npcs = npcsRef.current;
       for (const n of npcs) {
         if (n.reactionTimer > 0) { n.reactionTimer -= dt; if (n.reactionTimer <= 0) n.reactionEmoji = null; }
@@ -1638,7 +1860,6 @@ export default function MartinGame() {
       }
 
       // Camera
-      const scene = SCENES[m.scene];
       const camTarget = { x: m.x - canvas.clientWidth / 2, y: m.y - canvas.clientHeight / 2 };
       camTarget.x = clamp(camTarget.x, 0, Math.max(0, scene.width - canvas.clientWidth));
       camTarget.y = clamp(camTarget.y, 0, Math.max(0, scene.height - canvas.clientHeight));
@@ -1669,7 +1890,7 @@ export default function MartinGame() {
         }
       }
 
-      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current);
+      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current);
       eatTimerRef.current = Math.max(0, eatTimerRef.current - dt);
       if (ballAnimRef.current) {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
@@ -1842,6 +2063,9 @@ function render(
   shadowChud: ShadowChud | null,
   ballAnim: { t: number; made: boolean } | null,
   flightAnim: { phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null,
+  hellBoss: { hp: number; hpMax: number; x: number; y: number; punchCd: number; barrageCd: number; walkPhase: number; dir: Direction } | null,
+  hellProjectiles: { x: number; y: number; vx: number; vy: number; damage: number; active: boolean; emoji: string }[],
+  hellPickups: { x: number; y: number; type: "gun" | "food"; active: boolean; timer: number; lifetime: number }[],
 ) {
   const w = canvas.clientWidth; const h = canvas.clientHeight;
   const shakeX = (Math.random() - 0.5) * stats.shake;
@@ -1907,6 +2131,7 @@ function render(
 
   for (const n of npcs) {
     if (n.scene !== scene.id) continue;
+    if (n.def.id === "boss-charle") continue;
     drawNpc(ctx, n);
     if (n.speechBubble) drawSpeechBubble(ctx, n.x, n.y - n.def.size - 28, n.speechBubble);
     if (n.reactionEmoji) drawReaction(ctx, n.x + n.def.size, n.y - n.def.size - 8, n.reactionEmoji);
@@ -1922,6 +2147,26 @@ function render(
   }
 
   drawMartin(ctx, m, eatTimer > 0, stats.hunger, stats.chud);
+
+  if (scene.id === "hell") {
+    if (hellBoss) {
+      const bossDef = NPC_DEFS.find((d) => d.id === "boss-charle");
+      if (bossDef) drawBoss(ctx, hellBoss, bossDef);
+    }
+    ctx.save();
+    for (const p of hellPickups) {
+      if (!p.active) continue;
+      ctx.font = "20px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const emoji = p.type === "gun" ? "🔫" : "🍞";
+      ctx.fillText(emoji, p.x, p.y);
+    }
+    for (const proj of hellProjectiles) {
+      if (!proj.active) continue;
+      ctx.font = "20px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(proj.emoji, proj.x, proj.y);
+    }
+    ctx.restore();
+  }
 
   // Basketball arc animation
   if (ballAnim && scene.id === "court") {
@@ -1961,6 +2206,23 @@ function render(
   }
 
   ctx.restore();
+
+  // Boss HUD bar
+  if (scene.id === "hell" && hellBoss) {
+    const barW = 220;
+    const barH = 14;
+    const hpPct = Math.max(0, hellBoss.hp / hellBoss.hpMax);
+    const bx = w / 2 - barW / 2;
+    const by = 38;
+    ctx.fillStyle = "rgba(0,0,0,0.75)";
+    ctx.fillRect(bx, by, barW, barH);
+    ctx.fillStyle = "#d02020";
+    ctx.fillRect(bx, by, barW * hpPct, barH);
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, barW, barH);
+    ctx.fillStyle = "#fff"; ctx.font = "bold 9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+    ctx.fillText(`CHARLE THE COLOSSUS ${Math.ceil(hellBoss.hp)}/${hellBoss.hpMax}`, w / 2, by - 4);
+  }
 
   // Night overlay — stars, moon, darkness
   const dayProgress = stats.timeSec / DAY_LENGTH_SECONDS;
@@ -2534,6 +2796,53 @@ function drawMartin(ctx: CanvasRenderingContext2D, m: MartinState, eating: boole
   ctx.fillStyle = "rgba(255,255,255,0.9)";
   ctx.font = "9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
   ctx.fillText("MARTIN", x, y + R + 22);
+}
+
+function drawBoss(ctx: CanvasRenderingContext2D, boss: { hp: number; hpMax: number; x: number; y: number; punchCd: number; barrageCd: number; walkPhase: number; dir: Direction }, def: NpcDef) {
+  const { x, y, walkPhase, dir } = boss;
+  const bounce = Math.sin(walkPhase) * 2;
+  const r = def.size;
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath(); ctx.ellipse(x, y + r * 0.95, r * 0.9, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = def.color;
+  ctx.beginPath(); ctx.ellipse(x, y - bounce, r * 1.05, r, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.15)";
+  ctx.beginPath(); ctx.ellipse(x, y + r * 0.2 - bounce, r * 0.7, r * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+  const headR = Math.max(10, r * 0.55);
+  ctx.fillStyle = lighten(def.color, 0.15);
+  ctx.beginPath(); ctx.arc(x, y - r - headR * 0.2 - bounce, headR, 0, Math.PI * 2); ctx.fill();
+  if (def.hairColor) {
+    ctx.fillStyle = def.hairColor;
+    ctx.beginPath(); ctx.arc(x, y - r - headR * 0.5 - bounce, headR * 0.95, Math.PI, Math.PI * 2); ctx.fill();
+  }
+  let exo = 0, eyo = 0;
+  if (dir === "left") exo = -2; if (dir === "right") exo = 2;
+  if (dir === "up") eyo = -1;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.arc(x - headR * 0.3 + exo, y - r - headR * 0.2 - bounce + eyo, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + headR * 0.3 + exo, y - r - headR * 0.2 - bounce + eyo, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#000";
+  ctx.beginPath(); ctx.arc(x - headR * 0.3 + exo * 1.4, y - r - headR * 0.2 - bounce + eyo, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + headR * 0.3 + exo * 1.4, y - r - headR * 0.2 - bounce + eyo, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x, y - r - headR * 0.0 - bounce, headR * 0.25, 1.1 * Math.PI, 1.9 * Math.PI); ctx.stroke();
+  ctx.strokeStyle = "#c00"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x - headR * 0.5, y - r - headR * 0.2 - bounce - 5); ctx.lineTo(x - headR * 0.1, y - r - headR * 0.2 - bounce - 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + headR * 0.5, y - r - headR * 0.2 - bounce - 5); ctx.lineTo(x + headR * 0.1, y - r - headR * 0.2 - bounce - 2); ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = "9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+  ctx.fillText(def.name, x, y + r + 24);
+  const barW = 140;
+  const barH = 10;
+  const hpPct = Math.max(0, boss.hp / boss.hpMax);
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(x - barW / 2, y - r - headR - 18 - bounce, barW, barH);
+  ctx.fillStyle = "#e02020";
+  ctx.fillRect(x - barW / 2, y - r - headR - 18 - bounce, barW * hpPct, barH);
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 1;
+  ctx.strokeRect(x - barW / 2, y - r - headR - 18 - bounce, barW, barH);
+  ctx.fillStyle = "#fff"; ctx.font = "7px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+  ctx.fillText(`${Math.ceil(boss.hp)}/${boss.hpMax}`, x, y - r - headR - 22 - bounce);
 }
 
 function lighten(hex: string, amt: number) {

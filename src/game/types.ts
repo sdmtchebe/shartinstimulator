@@ -177,6 +177,7 @@ export interface GameStats {
   buttplugQuestStep: number; // 0=none, 1=met MoGgayla, 2=david talked, 3=has hummus, 4=gave david, 5=wolf talked, 6=kai beaten, 7=has buttplug, 8=complete
   hasHummus: boolean;
   hasButtplug: boolean;
+  hellDefeated: boolean;
   hasTicket: boolean;
 }
 

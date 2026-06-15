@@ -376,6 +376,16 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["💕", "⚫", "✨"],
     defaultMood: "happy",
   },
+  {
+    id: "boss-charle", name: "Charle the Colossus", homeScene: "hell", baseX: 1000, baseY: 750,
+    color: "#e89060", hairColor: "#d24a18", size: 150,
+    description: "Charle has grown to an enormous size. He's furious. He's orange. He's unstoppable.",
+    transformForm: "basketball", transformLabel: "turn Charle into a basketball",
+    isFat: true, isGinger: true, behavior: "static", staticSpot: true,
+    chatLines: ["I AM THE GAME", "YOU CANNOT WIN", "CHARLE IS ETERNAL"],
+    reactionEmojis: ["🏀", "😤"],
+    defaultMood: "angry",
+  },
 ];
 
 const COLORS = {
