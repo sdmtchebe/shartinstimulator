@@ -640,7 +640,7 @@ export const SCENES: Record<string, SceneDef> = {
     id: "fishing", name: "Fishing Dock", width: 900, height: 700,
     bgColor: "#2a4858", bgPattern: "water", spawnPos: { x: 400, y: 580 },
     walls: stdWalls(900, 700),
-    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 460, y: 1640 }, label: "Outside", color: COLORS.doorway }],
+    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 860, y: 1920 }, label: "Outside", color: COLORS.doorway }],
     interactables: [
       { id: "fishing-rod", x: 380, y: 200, w: 140, h: 50, label: "Cast fishing line", type: "fishing-rod", emoji: "🎣" },
       { id: "bait-bucket", x: 100, y: 100, w: 80, h: 80, label: "Bobby's Bait Bucket", type: "easter-text", emoji: "🪣" },
@@ -656,7 +656,7 @@ export const SCENES: Record<string, SceneDef> = {
     id: "stripclub", name: "Strip Club: McMoggayla's", width: 900, height: 700,
     bgColor: "#3a0a30", bgPattern: "club", spawnPos: { x: 400, y: 580 },
     walls: stdWalls(900, 700),
-    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 460, y: 1640 }, label: "Outside", color: COLORS.doorway }],
+    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 460, y: 1920 }, label: "Outside", color: COLORS.doorway }],
     interactables: [
       { id: "tip-jar", x: 100, y: 100, w: 80, h: 80, label: "Tip jar (chud only)", type: "tip-jar", emoji: "💰" },
       { id: "lap-pole", x: 700, y: 100, w: 80, h: 200, label: "Stripper pole (already worn out)", type: "easter-object", emoji: "🪴" },
@@ -705,7 +705,7 @@ export const SCENES: Record<string, SceneDef> = {
     id: "boutique", name: "MoggMcCrackeggayla Boutique", width: 900, height: 700,
     bgColor: "#4a3828", bgPattern: "carpet", spawnPos: { x: 400, y: 580 },
     walls: stdWalls(900, 700),
-    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 2060, y: 1810 }, label: "Outside", color: COLORS.doorway }],
+    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 2050, y: 1920 }, label: "Outside", color: COLORS.doorway }],
     interactables: [
       { id: "bt-mirror", x: 700, y: 80, w: 80, h: 100, label: "Full-length mirror (MoGgayla-sized)", type: "easter-text", emoji: "🪞" },
       { id: "bt-rack", x: 100, y: 200, w: 120, h: 80, label: "Rack of designer boubous", type: "easter-text", emoji: "👗" },
