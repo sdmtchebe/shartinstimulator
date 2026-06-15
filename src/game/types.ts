@@ -17,7 +17,8 @@ export type SceneId =
   | "fishing"
   | "stripclub"
   | "tunnel"
-  | "hidden-room";
+  | "hidden-room"
+  | "boutique";
 
 export interface Vec2 { x: number; y: number; }
 
@@ -37,7 +38,7 @@ export type InteractableType =
   | "fight-pit" | "chud-circle" | "easter-text" | "easter-object"
   | "moggayla-crack" | "transform-npc" | "street-food" | "decor-eat"
   | "exit-sign" | "fishing-rod" | "tip-jar" | "mom-tv"
-  | "selfie-spot" | "secret-stash" | "secret-diary";
+  | "selfie-spot" | "secret-stash" | "secret-diary" | "quest-item";
 
 export interface Interactable {
   id: string;
@@ -169,6 +170,10 @@ export interface GameStats {
   secretsFound: string[];
   questsCompleted: string[];
   scenesVisited: string[];
+  tutorialStep: number; // 0 = not started, 1 = fridge, 2 = mom, 3 = toilet, 4 = outside interaction, 5 = complete
+  buttplugQuestStep: number; // 0=none, 1=met MoGgayla, 2=david talked, 3=has hummus, 4=gave david, 5=wolf talked, 6=kai beaten, 7=has buttplug, 8=complete
+  hasHummus: boolean;
+  hasButtplug: boolean;
 }
 
 export interface Quest { id: string; label: string; }

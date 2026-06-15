@@ -32,6 +32,7 @@ export const FIGHTERS = [
   { id: "wolf-bobitos", name: "Wolf Shartos Bartos Bobitos", desc: "Soccer obsessed. Kicks you in the teeth.", color: "#3a5a3a", size: 50, hp: 60, dmg: 18, reward: 70 },
   { id: "cousin", name: "Cousin", desc: "Extremely fat. Slow but devastating.", color: "#7a4a2a", size: 90, hp: 100, dmg: 20, reward: 120 },
   { id: "pitounbibtibi", name: "Pitounbibtibi", desc: "A beautiful girl. Hits with grace.", color: "#d29ec0", size: 45, hp: 50, dmg: 22, reward: 60 },
+  { id: "kai", name: "Kai", desc: "Fueled by asbestos and spite. Fight club's deadliest chud.", color: "#d8c0a0", size: 48, hp: 75, dmg: 19, reward: 100 },
 ];
 
 export const CHUD_ACTIVITIES = [
@@ -76,6 +77,7 @@ export const ALL_QUESTS = [
   { id: "tutorat-3days", label: "Tutor Caillo 3 days in a row" },
   { id: "find-tunnel", label: "???" },
   { id: "find-hidden-room", label: "???" },
+  { id: "buttplug-quest", label: "Find MoGgayla's buttplug" },
 ];
 
 export interface DailyEvent {
@@ -364,6 +366,16 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
   },
+  {
+    id: "moggayla-bt", name: "MoGgayla", homeScene: "boutique", baseX: 450, baseY: 320,
+    color: "#3d2418", hairColor: "#0a0a0a", size: 95,
+    description: "An obese black girl. Owner of MoggMcCrackeggayla Boutique.",
+    transformForm: "bouboule", transformLabel: "turn MoGgayla into a Bouboule",
+    isFat: true, behavior: "static", staticSpot: true,
+    chatLines: ["Martin darling...", "my boutique, my rules", "travel awaits us both"],
+    reactionEmojis: ["💕", "⚫", "✨"],
+    defaultMood: "happy",
+  },
 ];
 
 const COLORS = {
@@ -404,7 +416,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 720, y: 1700, w: 260, h: 200, color: "#3a5a78", label: "Fishing Dock" },
       { x: 1120, y: 1700, w: 260, h: 200, color: "#5a4030", label: "Cousin's Crack Den" },
       { x: 1520, y: 1700, w: 260, h: 200, color: "#403060", label: "Sus Salon" },
-      { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "Pitounbibtibi Boutique" },
+      { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
@@ -419,6 +431,7 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-asb", x: 2030, y: 1280, w: 60, h: 30, targetScene: "asbestos", targetPos: { x: 400, y: 580 }, label: "Asbestos", color: COLORS.doorway },
       { id: "d-strip", x: 430, y: 1880, w: 60, h: 30, targetScene: "stripclub", targetPos: { x: 400, y: 580 }, label: "Strip Club", color: "#ff80c0" },
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
+      { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
     ],
     interactables: [
       { id: "street-food-1", x: 800, y: 700, w: 60, h: 60, label: "Eat trash bag", type: "street-food", emoji: "🗑️" },
@@ -470,6 +483,7 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "spider-web", x: 400, y: 80, w: 60, h: 50, label: "Spider web with 30 spiders", type: "easter-text", emoji: "🕸️" },
       { id: "blood-stain", x: 200, y: 480, w: 120, h: 40, label: "Old blood stain (humanoid shape)", type: "easter-text", emoji: "🩸" },
       { id: "cage", x: 540, y: 200, w: 100, h: 100, label: "Empty cage labeled 'Damian'", type: "easter-text", emoji: "🪤" },
+      { id: "basement-hummus", x: 300, y: 200, w: 70, h: 70, label: "Grab David's hummus", type: "quest-item", emoji: "🥙", oneShot: true },
     ],
   },
 
@@ -684,6 +698,19 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "secret-trophy", x: 250, y: 100, w: 100, h: 80, label: "Trophy: '1st place — Regional Chud Championship'", type: "easter-object", emoji: "🏆" },
       { id: "secret-cash", x: 80, y: 320, w: 80, h: 80, label: "Emergency cash hidden in sock", type: "secret-stash", emoji: "💵" },
       { id: "secret-mirror", x: 420, y: 280, w: 80, h: 100, label: "A mirror. Martin stares. Something stares back.", type: "easter-text", emoji: "🪞" },
+    ],
+  },
+
+  boutique: {
+    id: "boutique", name: "MoggMcCrackeggayla Boutique", width: 900, height: 700,
+    bgColor: "#4a3828", bgPattern: "carpet", spawnPos: { x: 400, y: 580 },
+    walls: stdWalls(900, 700),
+    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 2060, y: 1810 }, label: "Outside", color: COLORS.doorway }],
+    interactables: [
+      { id: "bt-mirror", x: 700, y: 80, w: 80, h: 100, label: "Full-length mirror (MoGgayla-sized)", type: "easter-text", emoji: "🪞" },
+      { id: "bt-rack", x: 100, y: 200, w: 120, h: 80, label: "Rack of designer boubous", type: "easter-text", emoji: "👗" },
+      { id: "bt-perfume", x: 100, y: 400, w: 80, h: 60, label: "Perfume: 'Eau de Chud'", type: "easter-text", emoji: "🧴" },
+      { id: "bt-counter", x: 350, y: 180, w: 200, h: 60, label: "Boutique counter", type: "easter-text", emoji: "💎" },
     ],
   },
 };

@@ -67,13 +67,30 @@ function initialStats(): GameStats {
     calledNpcs: [], survivedNight: false,
     dailyEvent: null, secretsFound: [],
     questsCompleted: ["wake-up"], scenesVisited: ["home"],
+    tutorialStep: 0,
+    buttplugQuestStep: 0, hasHummus: false, hasButtplug: false,
   };
+}
+
+function loadSaveData(): { stats: GameStats; martin: MartinState; npcs: NpcRuntime[] } | null {
+  try {
+    const saved = localStorage.getItem("martinGameSave");
+    if (!saved) return null;
+    const data = JSON.parse(saved);
+    return {
+      stats: { ...initialStats(), ...data.stats },
+      martin: { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100, ...data.martin },
+      npcs: data.npcs || makeNpcs(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default function MartinGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [showStart, setShowStart] = useState(true);
+  const [showStart, setShowStart] = useState(() => !localStorage.getItem("martinGameSave"));
   const [transitionFlash, setTransitionFlash] = useState(0);
   const [dialog, setDialog] = useState<DialogPayload>(null);
   const [fight, setFight] = useState<FightState | null>(null);
@@ -84,9 +101,11 @@ export default function MartinGame() {
   const fightRef = useRef<FightState | null>(null); fightRef.current = fight;
   const showPhoneRef = useRef(false); showPhoneRef.current = showPhone;
 
-  const martinRef = useRef<MartinState>({ scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100 });
-  const statsRef = useRef<GameStats>(initialStats());
-  const npcsRef = useRef<NpcRuntime[]>(makeNpcs());
+  const savedData = typeof window !== "undefined" ? loadSaveData() : null;
+
+  const martinRef = useRef<MartinState>(savedData?.martin ?? { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100 });
+  const statsRef = useRef<GameStats>(savedData?.stats ?? initialStats());
+  const npcsRef = useRef<NpcRuntime[]>(savedData?.npcs ?? makeNpcs());
   const keysRef = useRef<KeyState>({ up: false, down: false, left: false, right: false, interact: false, phone: false, mute: false });
   const lastInteractRef = useRef(0);
   const lastPhoneRef = useRef(0);
@@ -104,6 +123,43 @@ export default function MartinGame() {
   const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() + Math.random() }), []);
   const triggerTransition = useCallback(() => setTransitionFlash((n) => n + 1), []);
 
+  // Save/Load functions
+  const saveGame = useCallback(() => {
+    const saveData = {
+      version: 1,
+      stats: statsRef.current,
+      martin: martinRef.current,
+      npcs: npcsRef.current,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem("martinGameSave", JSON.stringify(saveData));
+  }, []);
+
+  const hasSave = useCallback(() => {
+    return !!localStorage.getItem("martinGameSave");
+  }, []);
+
+  const clearSave = useCallback(() => {
+    localStorage.removeItem("martinGameSave");
+  }, []);
+
+  const loadGame = useCallback(() => {
+    const saved = localStorage.getItem("martinGameSave");
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        statsRef.current = { ...initialStats(), ...data.stats };
+        martinRef.current = { ...martinRef.current, ...data.martin };
+        npcsRef.current = data.npcs || makeNpcs();
+        return true;
+      } catch (e) {
+        console.error("Failed to load save:", e);
+        return false;
+      }
+    }
+    return false;
+  }, []);
+
   const completeQuest = useCallback((id: string) => {
     if (statsRef.current.questsCompleted.includes(id)) return;
     statsRef.current.questsCompleted.push(id);
@@ -113,7 +169,8 @@ export default function MartinGame() {
     statsRef.current.totalMoneyEarned += reward;
     sound.play("questDone");
     showToast(`✓ Quest: ${ALL_QUESTS.find((q) => q.id === id)?.label} (+$${reward})`);
-  }, [showToast]);
+    saveGame();
+  }, [showToast, saveGame]);
 
   const visitScene = useCallback((id: SceneId) => {
     if (!statsRef.current.scenesVisited.includes(id)) {
@@ -130,7 +187,8 @@ export default function MartinGame() {
     triggerTransition();
     sound.play("door");
     visitScene(scene);
-  }, [triggerTransition, visitScene]);
+    saveGame();
+  }, [triggerTransition, visitScene, saveGame]);
 
   // UI tick
   const [, setUiTick] = useState(0);
@@ -138,6 +196,15 @@ export default function MartinGame() {
     const id = setInterval(() => setUiTick((n) => (n + 1) % 1_000_000), 100);
     return () => clearInterval(id);
   }, []);
+
+  // Auto-save during play
+  useEffect(() => {
+    if (showStart) return;
+    const id = setInterval(() => saveGame(), 30000);
+    const onUnload = () => saveGame();
+    window.addEventListener("beforeunload", onUnload);
+    return () => { clearInterval(id); window.removeEventListener("beforeunload", onUnload); };
+  }, [showStart, saveGame]);
 
   // Input
   useEffect(() => {
@@ -160,12 +227,7 @@ export default function MartinGame() {
     statsRef.current.chud = clamp(statsRef.current.chud + n, 0, 100);
     if (statsRef.current.chud >= 90) sound.startAlarm();
     else sound.stopAlarm();
-    if (statsRef.current.chud >= 100 && !statsRef.current.dead) {
-      statsRef.current.dead = true;
-      statsRef.current.causeOfDeath = "Martin chudded too hard. His body became 100% chud and gave out.";
-      sound.stopAlarm();
-      sound.play("death");
-    }
+    // Chud now slows movement instead of killing
   }, []);
 
   const addFriendship = useCallback((npcId: string, amount: number) => {
@@ -242,14 +304,40 @@ export default function MartinGame() {
     showToast(`Day ${statsRef.current.day} • ${statsRef.current.tutoratAvailable ? "Tutorat available!" : "No tutorat today"}${eventMsg}`);
   }, [moveToScene, showToast]);
 
-  const startGame = () => {
+  const startGame = (fresh = false) => {
     sound.init(); sound.resume();
+    if (fresh) {
+      clearSave();
+      statsRef.current = initialStats();
+      martinRef.current = { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100 };
+      npcsRef.current = makeNpcs();
+    } else {
+      const loaded = loadGame();
+      if (!loaded) {
+        statsRef.current.tutoratAvailable = true;
+        martinRef.current.scene = "home";
+        martinRef.current.x = 420; martinRef.current.y = 580;
+      }
+    }
     setShowStart(false);
-    statsRef.current.tutoratAvailable = true;
-    martinRef.current.scene = "home";
-    martinRef.current.x = 420; martinRef.current.y = 580;
-    showToast("Day 1 • Wake up Martin. WASD to move. E to interact. P for phone.");
+    if (fresh || statsRef.current.tutorialStep === 0) {
+      statsRef.current.tutorialStep = 1;
+      showToast("Tutorial: Go open the fridge (ice block) to start!");
+      saveGame();
+    } else if (!fresh && hasSave()) {
+      showToast("Game loaded! Welcome back, Martin.");
+    } else {
+      showToast("Day 1 • Wake up Martin. WASD to move. E to interact. P for phone.");
+    }
   };
+
+  // Init sound when resuming a saved session (skip start screen)
+  useEffect(() => {
+    if (savedData) {
+      sound.init().then(() => sound.resume());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Dialog actions
   const openFridge = () => {
@@ -269,6 +357,12 @@ export default function MartinGame() {
           reactNearbyNpcs("🤢");
           setDialog(null);
           showToast(`Martin devours ${f.name}. Burps moldily.`);
+          // Tutorial progression
+          if (statsRef.current.tutorialStep === 1) {
+            statsRef.current.tutorialStep = 2;
+            showToast("Tutorial: Now go talk to your mom upstairs!");
+            saveGame();
+          }
         },
       })).concat([{ label: "Close fridge", onSelect: () => setDialog(null) }]),
     });
@@ -375,10 +469,15 @@ export default function MartinGame() {
   };
 
   const startFightDialog = () => {
+    const step = statsRef.current.buttplugQuestStep;
+    const available = FIGHTERS.filter((f) => {
+      if (f.id === "kai") return step >= 5 && step < 6;
+      return true;
+    });
     setDialog({
       title: "Fight Club — Pick your opponent", emoji: "🥊",
-      body: "First rule of Fight Club: chud harder.",
-      choices: FIGHTERS.map((f) => ({
+      body: step >= 5 && step < 6 ? "Wolf sent you here. Kai awaits in the ring." : "First rule of Fight Club: chud harder.",
+      choices: available.map((f) => ({
         label: `${f.name} — ${f.desc} ($${f.reward})`,
         onSelect: () => {
           setDialog(null);
@@ -428,6 +527,11 @@ export default function MartinGame() {
         if (statsRef.current.fightsWonToday >= 3) completeQuest("win-3-fights");
         if (statsRef.current.fightsWonFighters.length >= FIGHTERS.length) completeQuest("fight-all");
         completeQuest("fight");
+        if (opp.id === "kai" && statsRef.current.buttplugQuestStep === 5) {
+          statsRef.current.buttplugQuestStep = 6;
+          showToast("Kai is down! Go see Wolf for the buttplug.");
+          saveGame();
+        }
         sound.play("victory");
       } else {
         f2.martinAnim = "idle"; f2.turn = "enemy";
@@ -594,6 +698,12 @@ export default function MartinGame() {
     sound.play("burp");
     reactNearbyNpcs("🤢");
     showToast(`Martin takes a massive shit. Chud evacuated. (−${chudReduction} chud)`);
+    // Tutorial progression
+    if (statsRef.current.tutorialStep === 3) {
+      statsRef.current.tutorialStep = 4;
+      showToast("Tutorial: Now go outside and interact with a character (press E)!");
+      saveGame();
+    }
   };
 
   const fishCast = () => {
@@ -663,12 +773,26 @@ export default function MartinGame() {
       body: "Mom is glued to the Chud Channel. She doesn't look up.",
       choices: [
         { label: "Hi mom (she ignores you)",
-          onSelect: () => { addChud(1); setDialog(null); showToast("Mom: '...mhm.'"); } },
+          onSelect: () => {
+            addChud(1); setDialog(null); showToast("Mom: '...mhm.'");
+            // Tutorial progression
+            if (statsRef.current.tutorialStep === 2) {
+              statsRef.current.tutorialStep = 3;
+              showToast("Tutorial: Now go take a shit in the toilet!");
+              saveGame();
+            }
+          } },
         { label: "Beg for $20 (20% chance)",
           onSelect: () => {
             if (Math.random() < 0.2) { addMoney(20); showToast("Mom hands you a crumpled $20 without looking."); sound.play("coin"); }
             else { addChud(3); showToast("Mom: 'go away Martin im watching.'"); }
             setDialog(null);
+            // Tutorial progression
+            if (statsRef.current.tutorialStep === 2) {
+              statsRef.current.tutorialStep = 3;
+              showToast("Tutorial: Now go take a shit in the toilet!");
+              saveGame();
+            }
           } },
         { label: "Hug mom (heal 10 HP)", primary: true,
           onSelect: () => {
@@ -676,12 +800,24 @@ export default function MartinGame() {
             statsRef.current.chud = Math.max(0, statsRef.current.chud - 2);
             setDialog(null); showToast("Mom love. +10 HP, -2 chud.");
             sound.play("victory");
+            // Tutorial progression
+            if (statsRef.current.tutorialStep === 2) {
+              statsRef.current.tutorialStep = 3;
+              showToast("Tutorial: Now go take a shit in the toilet!");
+              saveGame();
+            }
           } },
         { label: "Watch TV with her (+5 chud)",
           onSelect: () => {
             addChud(5); statsRef.current.timeSec += 20;
             sound.play("tvStatic"); setDialog(null);
             showToast("You both stare at the chud channel. Time melts.");
+            // Tutorial progression
+            if (statsRef.current.tutorialStep === 2) {
+              statsRef.current.tutorialStep = 3;
+              showToast("Tutorial: Now go take a shit in the toilet!");
+              saveGame();
+            }
           } },
       ],
     });
@@ -734,26 +870,151 @@ export default function MartinGame() {
       return;
     }
 
-    const setEmotion = (e: typeof npc.emotion) => { npc.emotion = e; npc.emotionTimer = 3000; };
+    if (npc.def.id === "moggayla-bt") {
+      const step = statsRef.current.buttplugQuestStep;
+      if (step === 0) {
+        setDialog({
+          title: "MoGgayla", emoji: "💕",
+          body: "Oh my gosh Martin, you are so fat obese and strong, I fell in love with you, but before we can travel, please help me find my buttplug darling, maybe David knows :)",
+          choices: [{
+            label: "I'll find it!", primary: true,
+            onSelect: () => {
+              statsRef.current.buttplugQuestStep = 1;
+              completeQuest("buttplug-quest");
+              showToast("📜 New Main Quest: Find MoGgayla's buttplug");
+              saveGame();
+              setDialog(null);
+            },
+          }],
+        });
+        return;
+      }
+      if (step >= 1 && step < 7) {
+        setDialog({
+          title: "MoGgayla", emoji: "💕",
+          body: "Please help me find my buttplug darling! Maybe David knows...",
+          choices: [{ label: "I'm on it", onSelect: () => setDialog(null) }],
+        });
+        return;
+      }
+      if (step === 7 && statsRef.current.hasButtplug) {
+        setDialog({
+          title: "MoGgayla", emoji: "💕",
+          body: "Omg Martin, you are so brave! Now we can leave this little hometown — I could never leave without my buttplug.",
+          choices: [{
+            label: "Let's travel together!", primary: true,
+            onSelect: () => {
+              statsRef.current.buttplugQuestStep = 8;
+              statsRef.current.hasButtplug = false;
+              addFriendship("moggayla-bt", 30);
+              showToast("MoGgayla hugs you. The adventure begins!");
+              saveGame();
+              setDialog(null);
+            },
+          }],
+        });
+        return;
+      }
+      setDialog({
+        title: "MoGgayla", emoji: "💕",
+        body: npc.def.description,
+        choices: [{ label: "Say hi", onSelect: () => { showToast("MoGgayla: 'My hero Martin!'"); setDialog(null); } }],
+      });
+      return;
+    }
 
-    const choices: DialogChoice[] = [
+    const setEmotion = (e: typeof npc.emotion) => { npc.emotion = e; npc.emotionTimer = 3000; };
+    const questStep = statsRef.current.buttplugQuestStep;
+
+    const choices: DialogChoice[] = [];
+
+    // Quest-specific interactions (unlocked in sequence)
+    if (npc.def.id === "david" && questStep === 1) {
+      choices.push({
+        label: "🥙 Ask about MoGgayla's buttplug", primary: true,
+        onSelect: () => {
+          statsRef.current.buttplugQuestStep = 2;
+          showToast("David: hummus is in your basement. Go grab it!");
+          setDialog({
+            title: "David", emoji: "🥙",
+            body: "Bring me some hummus and I will tell you who has it. I might have lost it in your basement.",
+            choices: [{ label: "Got it", onSelect: () => { saveGame(); setDialog(null); } }],
+          });
+        },
+      });
+    }
+    if (npc.def.id === "david" && questStep === 3 && statsRef.current.hasHummus) {
+      choices.push({
+        label: "🥙 Give David the hummus", primary: true,
+        onSelect: () => {
+          statsRef.current.buttplugQuestStep = 4;
+          statsRef.current.hasHummus = false;
+          showToast("David: Go ask Wolf, he definitely has it.");
+          setDialog({
+            title: "David", emoji: "🥙",
+            body: "Go ask Wolf, he definitely has it.",
+            choices: [{ label: "Thanks David", onSelect: () => { saveGame(); setDialog(null); } }],
+          });
+        },
+      });
+    }
+    if (npc.def.id === "wolf-npc" && questStep === 4) {
+      choices.push({
+        label: "🔌 Ask about the forbidden buttplug", primary: true,
+        onSelect: () => {
+          statsRef.current.buttplugQuestStep = 5;
+          showToast("Wolf: Kill Kai at the Fight Club. Then we'll talk.");
+          setDialog({
+            title: "Wolf Shartos Bartos Bobitos", emoji: "⌚",
+            body: "Oh... that forbidden buttplug. I have it, but it is so valuable that I need you to do something — you will have to kill Kai for me... at the fight club.",
+            choices: [{ label: "It shall be done", onSelect: () => { saveGame(); setDialog(null); } }],
+          });
+        },
+      });
+    }
+    if (npc.def.id === "wolf-npc" && questStep === 6) {
+      choices.push({
+        label: "🔌 Collect the buttplug", primary: true,
+        onSelect: () => {
+          statsRef.current.buttplugQuestStep = 7;
+          statsRef.current.hasButtplug = true;
+          showToast("Wolf hands you the forbidden buttplug. Bring it to MoGgayla!");
+          setDialog({
+            title: "Wolf Shartos Bartos Bobitos", emoji: "⌚",
+            body: "You earned it. Take the buttplug to MoGgayla at the boutique. And don't tell anyone I had it.",
+            choices: [{ label: "Thank you Wolf", onSelect: () => { saveGame(); setDialog(null); } }],
+          });
+        },
+      });
+    }
+
+    choices.push(
       { label: "Say hi", onSelect: () => {
           npc.speechBubble = randomChoice(npc.def.chatLines || ["...??"]);
           npc.speechTimer = 2500;
           setEmotion("happy");
           addFriendship(npc.def.id, 3);
           sound.play("select");
-          showToast(`${npc.def.name}: "${npc.speechBubble}"`); setDialog(null); } },
+          showToast(`${npc.def.name}: "${npc.speechBubble}"`); setDialog(null);
+          // Tutorial progression
+          if (statsRef.current.tutorialStep === 4 && martinRef.current.scene === "outside") {
+            statsRef.current.tutorialStep = 5;
+            showToast("Tutorial complete! You're ready to explore the world of Martin.");
+            saveGame();
+          }
+        } },
       { label: "Mock them (+3 chud)",
         onSelect: () => { addChud(3); setEmotion("angry"); npc.reactionEmoji = "😠"; npc.reactionTimer = 2000;
           addFriendship(npc.def.id, -8);
           showToast(`${npc.def.name} looks hurt. You cackle.`); setDialog(null); } },
       { label: npc.def.transformLabel, primary: true,
         onSelect: () => { transformNpc(npc); setDialog(null); } },
-    ];
+    );
 
-    // Special action per NPC
-    if (npc.def.specialAction) {
+    // Special action per NPC (skip david hummus during quest steps 1-4)
+    const skipDavidHummus = npc.def.id === "david" && questStep >= 1 && questStep <= 4;
+    const skipWolfWatch = npc.def.id === "wolf-npc" && questStep >= 4 && questStep <= 6;
+    if (npc.def.specialAction && !skipDavidHummus && !skipWolfWatch) {
       const sa = npc.def.specialAction;
       choices.push({
         label: `${sa.emoji} ${sa.label}`,
@@ -772,8 +1033,10 @@ export default function MartinGame() {
               break;
             }
             case "wolf-npc": {
-              statsRef.current.timeSec += 25; setEmotion("smug"); sound.play("select");
-              showToast("Wolf shows off the Cartier for 15 minutes. Time lost forever.");
+              if (questStep < 4 || questStep >= 7) {
+                statsRef.current.timeSec += 25; setEmotion("smug"); sound.play("select");
+                showToast("Wolf shows off the Cartier for 15 minutes. Time lost forever.");
+              }
               break;
             }
             case "konstantin": {
@@ -896,6 +1159,16 @@ export default function MartinGame() {
           case "decor-eat":
             if (it.id === "toilet") { takeShit(); return; }
             decorEat(it); return;
+          case "quest-item":
+            if (it.id === "basement-hummus" && statsRef.current.buttplugQuestStep >= 2 && !statsRef.current.hasHummus) {
+              statsRef.current.hasHummus = true;
+              statsRef.current.buttplugQuestStep = 3;
+              sound.play("select");
+              showToast("Martin grabs David's hummus. Bring it to David!");
+              saveGame();
+              return;
+            }
+            return;
           case "fishing-rod": fishCast(); return;
           case "tip-jar": tipJar(); return;
           case "mom-tv": momTV(); return;
@@ -1000,7 +1273,9 @@ export default function MartinGame() {
         const len = Math.hypot(dx, dy);
         if (len > 0) {
           dx /= len; dy /= len;
-          const speed = PLAYER_SPEED * (dt / 16);
+          // Movement slows down as chud increases
+          const chudSlowdown = 1 - (stats.chud / 100) * 0.7; // Up to 70% slower at 100% chud
+          const speed = PLAYER_SPEED * chudSlowdown * (dt / 16);
           const newX = m.x + dx * speed;
           const newY = m.y + dy * speed;
           if (!collides(newX, m.y, m.scene)) m.x = newX;
@@ -1041,11 +1316,9 @@ export default function MartinGame() {
       if (stats.money === 0 && stats.totalMoneyEarned > 0) completeQuest("broke");
       if (isNight && m.scene !== "outside" && nightWarningShownRef.current) stats.survivedNight = true;
 
-      if (stats.chud >= 100 && !stats.dead) {
-        stats.dead = true;
-        stats.causeOfDeath = "Martin chudded too hard. RIP.";
-        sound.stopAlarm(); sound.play("death");
-      }
+      // Max chud slows movement — no death from chud
+      if (stats.chud >= 100) stats.shake = Math.min(6, stats.shake + 0.05);
+
       if (martinRef.current.hp <= 0 && !stats.dead && !fightRef.current) {
         stats.dead = true;
         stats.causeOfDeath = "Martin's body gave out from a beating.";
@@ -1344,6 +1617,7 @@ export default function MartinGame() {
   })();
 
   const respawn = () => {
+    clearSave();
     statsRef.current = initialStats();
     martinRef.current = { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100 };
     npcsRef.current = makeNpcs();
@@ -1370,6 +1644,10 @@ export default function MartinGame() {
           questsDone={stats.questsCompleted.length}
           questsTotal={ALL_QUESTS.length}
           dailyEvent={stats.dailyEvent}
+          tutorialStep={stats.tutorialStep}
+          mainQuestStep={stats.buttplugQuestStep}
+          hasHummus={stats.hasHummus}
+          hasButtplug={stats.hasButtplug}
         />
       )}
 
@@ -1416,7 +1694,7 @@ export default function MartinGame() {
         </div>
       )}
 
-      {showStart && <StartScreen onStart={startGame} />}
+      {showStart && <StartScreen hasSave={hasSave()} onContinue={() => startGame(false)} onNewGame={() => startGame(true)} />}
     </div>
   );
 }
@@ -1489,6 +1767,7 @@ function render(
   }
 
   for (const it of scene.interactables) {
+    if (it.id === "basement-hummus" && (stats.buttplugQuestStep < 2 || stats.hasHummus)) continue;
     drawInteractable(ctx, it);
     if (m.x > it.x - 60 && m.x < it.x + it.w + 60 && m.y > it.y - 60 && m.y < it.y + it.h + 60) {
       ctx.fillStyle = "rgba(0,0,0,0.75)";
@@ -2032,23 +2311,34 @@ function lighten(hex: string, amt: number) {
   return `rgb(${r},${g},${b})`;
 }
 
-function StartScreen({ onStart }: { onStart: () => void }) {
+function StartScreen({ hasSave, onContinue, onNewGame }: { hasSave: boolean; onContinue: () => void; onNewGame: () => void }) {
   return (
     <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#2a1810] to-[#0a0500] p-8 gap-6 text-center">
       <h1 className="pixel-text text-3xl md:text-5xl text-primary drop-shadow-[0_0_10px_rgba(255,180,40,0.5)]">MARTIN</h1>
       <h2 className="pixel-text text-sm md:text-lg text-accent">Chud Chronicles</h2>
       <p className="pixel-text text-[10px] md:text-xs max-w-2xl text-foreground/85 leading-relaxed">
         Live the cringe life of Martin. Wake up. Eat moldy shit. Tutor Caillo. Fight McCrackeylla.
-        Avoid Cousin Roy in the basement. Visit Mom. Fish. Don't chud TOO hard or you literally die.
+        Avoid Cousin in the basement. Visit Mom. Fish. Max chud slows you down — but won't kill you.
       </p>
       <div className="pixel-text text-[9px] md:text-[10px] text-muted-foreground">
         Move: WASD/Arrows • Interact: E/Space • Phone: P • Mute: M
       </div>
-      <button onClick={onStart} className="pixel-text bg-primary text-primary-foreground px-6 py-3 rounded mt-2 hover:brightness-110 transition">
-        Wake Up Martin
-      </button>
+      {hasSave ? (
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          <button onClick={onContinue} className="pixel-text bg-primary text-primary-foreground px-6 py-3 rounded hover:brightness-110 transition">
+            Continue
+          </button>
+          <button onClick={onNewGame} className="pixel-text bg-secondary text-secondary-foreground px-6 py-3 rounded hover:brightness-110 transition">
+            New Game
+          </button>
+        </div>
+      ) : (
+        <button onClick={onNewGame} className="pixel-text bg-primary text-primary-foreground px-6 py-3 rounded mt-2 hover:brightness-110 transition">
+          Wake Up Martin
+        </button>
+      )}
       <div className="pixel-text text-[8px] text-muted-foreground mt-4 max-w-md">
-        Tip: tutorat earns money, eating from the fridge fills hunger, eating the world does NOT.
+        Tip: your progress auto-saves. Close the tab and come back anytime.
       </div>
     </div>
   );
