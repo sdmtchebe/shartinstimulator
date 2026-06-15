@@ -1709,10 +1709,9 @@ function collides(x: number, y: number, sceneId: SceneId): boolean {
     const closestY = clamp(y, w.y, w.y + w.h);
     const dx = x - closestX; const dy = y - closestY;
     if (dx * dx + dy * dy < r * r) {
-      if (sceneId === "outside") {
-        for (const d of scene.doors) {
-          if (Math.abs(d.x - closestX) < d.w && Math.abs(d.y - closestY) < d.h + 20) return false;
-        }
+      // Check if near a door (allow passage through doors in all scenes)
+      for (const d of scene.doors) {
+        if (Math.abs(d.x - closestX) < d.w && Math.abs(d.y - closestY) < d.h + 20) return false;
       }
       return true;
     }
