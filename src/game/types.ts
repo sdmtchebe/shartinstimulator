@@ -18,7 +18,9 @@ export type SceneId =
   | "stripclub"
   | "tunnel"
   | "hidden-room"
-  | "boutique";
+  | "boutique"
+  | "airport"
+  | "hell";
 
 export interface Vec2 { x: number; y: number; }
 
@@ -38,7 +40,8 @@ export type InteractableType =
   | "fight-pit" | "chud-circle" | "easter-text" | "easter-object"
   | "moggayla-crack" | "transform-npc" | "street-food" | "decor-eat"
   | "exit-sign" | "fishing-rod" | "tip-jar" | "mom-tv"
-  | "selfie-spot" | "secret-stash" | "secret-diary" | "quest-item";
+  | "selfie-spot" | "secret-stash" | "secret-diary" | "quest-item"
+  | "airport-desk";
 
 export interface Interactable {
   id: string;
@@ -58,7 +61,7 @@ export interface SceneDef {
   width: number;
   height: number;
   bgColor: string;
-  bgPattern?: "grass" | "wood" | "tile" | "concrete" | "carpet" | "ring" | "club" | "water";
+  bgPattern?: "grass" | "wood" | "tile" | "concrete" | "carpet" | "ring" | "club" | "water" | "hell";
   walls: Wall[];
   doors: Door[];
   interactables: Interactable[];
@@ -174,6 +177,7 @@ export interface GameStats {
   buttplugQuestStep: number; // 0=none, 1=met MoGgayla, 2=david talked, 3=has hummus, 4=gave david, 5=wolf talked, 6=kai beaten, 7=has buttplug, 8=complete
   hasHummus: boolean;
   hasButtplug: boolean;
+  hasTicket: boolean;
 }
 
 export interface Quest { id: string; label: string; }

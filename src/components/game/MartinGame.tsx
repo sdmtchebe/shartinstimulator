@@ -79,7 +79,7 @@ function initialStats(): GameStats {
     dailyEvent: null, secretsFound: [],
     questsCompleted: ["wake-up"], scenesVisited: ["home"],
     tutorialStep: 0,
-    buttplugQuestStep: 0, hasHummus: false, hasButtplug: false,
+    buttplugQuestStep: 0, hasHummus: false, hasButtplug: false, hasTicket: false,
   };
 }
 
@@ -109,6 +109,7 @@ export default function MartinGame() {
   const [fight, setFight] = useState<FightState | null>(null);
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
   const [showPhone, setShowPhone] = useState(false);
+  const [flightAnim, setFlightAnim] = useState<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null);
   const [muted, setMuted] = useState(false);
   const dialogRef = useRef<DialogPayload>(null); dialogRef.current = dialog;
   const fightRef = useRef<FightState | null>(null); fightRef.current = fight;
@@ -131,6 +132,7 @@ export default function MartinGame() {
   const shadowChudCdRef = useRef(0); // cooldown between bites
   const nightWarningShownRef = useRef(false);
   const ballAnimRef = useRef<{ t: number; made: boolean } | null>(null); // basketball arc anim
+  const flightAnimRef = useRef<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null); flightAnimRef.current = flightAnim;
   const [, forceUpdate] = useState(0);
 
   const showToast = useCallback((msg: string) => setToast({ msg, key: Date.now() + Math.random() }), []);
@@ -853,6 +855,72 @@ export default function MartinGame() {
     });
   };
 
+  const startPlaneFlight = () => {
+    setDialog(null);
+    setFlightAnim({ phase: "takeoff", timer: 0 });
+    sound.play("sleep");
+    showToast("✈️ Boarding the plane with MoGgayla...");
+  };
+
+  const airportDesk = () => {
+    const s = statsRef.current;
+    const questComplete = s.buttplugQuestStep >= 8;
+
+    if (!questComplete) {
+      setDialog({
+        title: "Control Desk", emoji: "✈️",
+        body: "Welcome to Martin Int'l Airport. Where would you like to go?\n\nSorry sir, we only have one destination: HELL. And you need to complete your buttplug quest first.",
+        choices: [{ label: "Walk away", onSelect: () => setDialog(null) }],
+      });
+      return;
+    }
+
+    if (s.hasTicket) {
+      setDialog({
+        title: "Control Desk", emoji: "✈️",
+        body: "Your ticket to HELL is confirmed. Gate 666. MoGgayla is waiting at the gate.",
+        choices: [
+          { label: "✈️ Board the plane with MoGgayla", primary: true, onSelect: startPlaneFlight },
+          { label: "Not yet", onSelect: () => setDialog(null) },
+        ],
+      });
+      return;
+    }
+
+    if (s.money < 500) {
+      setDialog({
+        title: "Control Desk", emoji: "✈️",
+        body: "One-way ticket to HELL: $500. You don't have enough money, sir. Maybe sell some moldy food?",
+        choices: [{ label: "Walk away", onSelect: () => setDialog(null) }],
+      });
+      return;
+    }
+
+    setDialog({
+      title: "Control Desk", emoji: "✈️",
+      body: "One-way ticket to HELL: $500. No refunds. No survival guarantee. MoGgayla gets a free seat.",
+      choices: [
+        { label: "💸 Buy ticket ($500)", primary: true,
+          onSelect: () => {
+            addMoney(-500);
+            s.hasTicket = true;
+            sound.play("coin");
+            showToast("Ticket purchased! $500 for a one-way trip to HELL.");
+            saveGame();
+            setDialog({
+              title: "Control Desk", emoji: "✈️",
+              body: "Your ticket is confirmed. Gate 666. Don't be late.",
+              choices: [
+                { label: "✈️ Board the plane with MoGgayla", primary: true, onSelect: startPlaneFlight },
+                { label: "Not yet", onSelect: () => setDialog(null) },
+              ],
+            });
+          } },
+        { label: "Walk away", onSelect: () => setDialog(null) },
+      ],
+    });
+  };
+
   const interactWithNpc = (npc: NpcRuntime) => {
     if (npc.transformed) {
       setDialog({
@@ -1189,6 +1257,7 @@ export default function MartinGame() {
             }
             return;
           case "fishing-rod": fishCast(); return;
+          case "airport-desk": airportDesk(); return;
           case "tip-jar": tipJar(); return;
           case "mom-tv": momTV(); return;
           case "selfie-spot": selfieSpot(); return;
@@ -1240,7 +1309,7 @@ export default function MartinGame() {
     const tick = () => {
       const k = keysRef.current;
       const now = performance.now();
-      if (k.interact && !prevI && !dialogRef.current && !fightRef.current && !showPhoneRef.current && !showStart) {
+      if (k.interact && !prevI && !dialogRef.current && !fightRef.current && !showPhoneRef.current && !flightAnimRef.current && !showStart) {
         if (now - lastInteractRef.current > 200) { lastInteractRef.current = now; tryInteract(); }
       }
       if (k.phone && !prevP && !showStart) {
@@ -1281,7 +1350,7 @@ export default function MartinGame() {
       const dt = Math.min(40, ts - lastTs); lastTs = ts;
       const dtSec = dt / 1000;
       const stats = statsRef.current; const m = martinRef.current;
-      const dialogActive = !!dialogRef.current || !!fightRef.current || showPhoneRef.current;
+      const dialogActive = !!dialogRef.current || !!fightRef.current || showPhoneRef.current || !!flightAnimRef.current;
 
       if (!stats.dead && !dialogActive) {
         let dx = 0, dy = 0;
@@ -1576,7 +1645,31 @@ export default function MartinGame() {
       cameraRef.current.x += (camTarget.x - cameraRef.current.x) * 0.15;
       cameraRef.current.y += (camTarget.y - cameraRef.current.y) * 0.15;
 
-      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current);
+      // Flight animation update
+      const flight = flightAnimRef.current;
+      if (flight) {
+        flight.timer += dt;
+        if (flight.phase === "takeoff" && flight.timer > 1500) {
+          flight.phase = "flying";
+          flight.timer = 0;
+        } else if (flight.phase === "flying" && flight.timer > 2500) {
+          flight.phase = "landing";
+          flight.timer = 0;
+        } else if (flight.phase === "landing" && flight.timer > 1500) {
+          flightAnimRef.current = null;
+          setFlightAnim(null);
+          martinRef.current.scene = "hell";
+          martinRef.current.x = 1000;
+          martinRef.current.y = 1200;
+          triggerTransition();
+          sound.play("door");
+          showToast("✈️ Welcome to HELL. Enjoy your stay.");
+          visitScene("hell");
+          saveGame();
+        }
+      }
+
+      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current);
       eatTimerRef.current = Math.max(0, eatTimerRef.current - dt);
       if (ballAnimRef.current) {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
@@ -1596,7 +1689,7 @@ export default function MartinGame() {
     const tick = (ts: number) => {
       const dt = Math.min(50, ts - last); last = ts;
       const stats = statsRef.current;
-      const dialogActive = !!dialogRef.current || !!fightRef.current || showPhoneRef.current;
+      const dialogActive = !!dialogRef.current || !!fightRef.current || showPhoneRef.current || !!flightAnimRef.current;
       if (!stats.dead && !dialogActive) {
         stats.timeSec += dt / 1000;
         if (stats.timeSec >= DAY_LENGTH_SECONDS) { stats.timeSec = 0; startNewDay(); }
@@ -1748,6 +1841,7 @@ function render(
   eatTimer: number,
   shadowChud: ShadowChud | null,
   ballAnim: { t: number; made: boolean } | null,
+  flightAnim: { phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null,
 ) {
   const w = canvas.clientWidth; const h = canvas.clientHeight;
   const shakeX = (Math.random() - 0.5) * stats.shake;
@@ -1937,6 +2031,97 @@ function render(
     const sy = shadowChud.y - camY;
     drawShadowChud(ctx, sx, sy, shadowChud.phase);
   }
+
+  // Flight animation overlay
+  if (flightAnim) {
+    ctx.save();
+    const w = canvas.clientWidth; const h = canvas.clientHeight;
+    ctx.fillStyle = "#0a2040";
+    ctx.fillRect(0, 0, w, h);
+
+    // Stars
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    for (let i = 0; i < 60; i++) {
+      const sx = (i * 137.5) % w;
+      const sy = (i * 73.3) % h;
+      const sz = i % 3 === 0 ? 2 : 1;
+      const twinkle = 0.5 + 0.5 * Math.sin(performance.now() / 400 + i * 2.1);
+      ctx.globalAlpha = twinkle * 0.9;
+      ctx.beginPath(); ctx.arc(sx, sy, sz, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Moon
+    const moonX = w * 0.15; const moonY = h * 0.2;
+    ctx.fillStyle = "rgba(240, 245, 200, 0.9)";
+    ctx.beginPath(); ctx.arc(moonX, moonY, 18, 0, Math.PI * 2); ctx.fill();
+
+    // Clouds (passing by)
+    const cloudSpeed = flightAnim.phase === "flying" ? 8 : 2;
+    const cloudOffset = (flightAnim.timer / 16) * cloudSpeed;
+    for (let i = 0; i < 8; i++) {
+      const cx = ((i * 250 + cloudOffset) % (w + 200)) - 100;
+      const cy = 80 + (i * 73) % (h * 0.4);
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 40, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Plane
+    const planeX = flightAnim.phase === "takeoff"
+      ? w * 0.3 + (flightAnim.timer / 1500) * w * 0.2
+      : flightAnim.phase === "flying"
+      ? w * 0.5 + Math.sin(flightAnim.timer / 500) * 30
+      : w * 0.7 + (flightAnim.timer / 1500) * w * 0.2;
+    const planeY = flightAnim.phase === "takeoff"
+      ? h * 0.6 - (flightAnim.timer / 1500) * h * 0.35
+      : flightAnim.phase === "flying"
+      ? h * 0.25 + Math.sin(flightAnim.timer / 300) * 10
+      : h * 0.25 + (flightAnim.timer / 1500) * h * 0.35;
+    const scale = flightAnim.phase === "takeoff"
+      ? 0.6 + (flightAnim.timer / 1500) * 0.4
+      : flightAnim.phase === "flying" ? 1 : 1 - (flightAnim.timer / 1500) * 0.3;
+
+    ctx.save();
+    ctx.translate(planeX, planeY);
+    ctx.scale(scale, scale);
+    // Plane body
+    ctx.fillStyle = "#e0e0e0";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 40, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Wings
+    ctx.fillStyle = "#c0c0c0";
+    ctx.beginPath();
+    ctx.moveTo(-10, 0); ctx.lineTo(-25, 18); ctx.lineTo(5, 18); ctx.lineTo(10, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-5, -5); ctx.lineTo(-15, -18); ctx.lineTo(5, -18); ctx.lineTo(10, -5);
+    ctx.fill();
+    // Tail
+    ctx.fillStyle = "#b0b0b0";
+    ctx.beginPath();
+    ctx.moveTo(30, -2); ctx.lineTo(40, -12); ctx.lineTo(35, -2);
+    ctx.fill();
+    // Windows
+    ctx.fillStyle = "#4a90d9";
+    for (let i = -20; i < 20; i += 10) {
+      ctx.beginPath(); ctx.arc(i, -3, 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+
+    // "10 hours later" text during flying phase
+    if (flightAnim.phase === "flying" && flightAnim.timer > 800) {
+      const alpha = Math.min(1, (flightAnim.timer - 800) / 600);
+      ctx.fillStyle = `rgba(255, 180, 40, ${alpha})`;
+      ctx.font = "bold 24px 'Press Start 2P', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("10 HOURS LATER", w / 2, h / 2);
+    }
+
+    ctx.restore();
+  }
 }
 
 function drawShadowChud(ctx: CanvasRenderingContext2D, x: number, y: number, phase: number) {
@@ -2085,6 +2270,36 @@ function drawBackgroundPattern(ctx: CanvasRenderingContext2D, scene: ReturnType<
       }
       ctx.stroke();
     }
+  } else if (bgPattern === "hell") {
+    // Glowing cracks in the ground
+    ctx.strokeStyle = "rgba(220, 40, 20, 0.35)"; ctx.lineWidth = 2;
+    for (let i = 0; i < 15; i++) {
+      const sx = (i * 137) % width;
+      const sy = (i * 89) % height;
+      ctx.beginPath(); ctx.moveTo(sx, sy);
+      for (let j = 0; j < 4; j++) {
+        ctx.lineTo(sx + (Math.random() - 0.5) * 80, sy + (Math.random() - 0.5) * 80);
+      }
+      ctx.stroke();
+    }
+    // Floating embers
+    ctx.fillStyle = "rgba(255, 80, 20, 0.6)";
+    const emberTime = Date.now() / 1000;
+    for (let i = 0; i < 40; i++) {
+      const ex = (i * 67) % width;
+      const ey = (i * 43 + emberTime * 30) % height;
+      const es = 1 + (i % 3);
+      const glow = 0.3 + 0.7 * Math.sin(emberTime * 2 + i * 1.7);
+      ctx.globalAlpha = glow;
+      ctx.beginPath(); ctx.arc(ex, ey, es, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // Distant fire glow at bottom
+    const fireGrad = ctx.createLinearGradient(0, height * 0.7, 0, height);
+    fireGrad.addColorStop(0, "rgba(180, 30, 10, 0)");
+    fireGrad.addColorStop(1, "rgba(180, 30, 10, 0.25)");
+    ctx.fillStyle = fireGrad;
+    ctx.fillRect(0, height * 0.7, width, height * 0.3);
   }
   ctx.restore();
 }

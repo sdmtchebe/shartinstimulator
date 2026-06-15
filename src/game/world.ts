@@ -417,6 +417,8 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 1120, y: 1700, w: 260, h: 200, color: "#5a4030", label: "Cousin's Crack Den" },
       { x: 1520, y: 1700, w: 260, h: 200, color: "#403060", label: "Sus Salon" },
       { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
+      // Airport — top left corner
+      { x: 50, y: 50, w: 300, h: 220, color: "#4a5a6a", label: "Martin Int'l Airport" },
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
@@ -432,6 +434,7 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-strip", x: 430, y: 1880, w: 60, h: 30, targetScene: "stripclub", targetPos: { x: 400, y: 580 }, label: "Strip Club", color: "#ff80c0" },
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
       { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
+      { id: "d-airport", x: 200, y: 250, w: 60, h: 30, targetScene: "airport", targetPos: { x: 500, y: 580 }, label: "Airport", color: "#a0b0c0" },
     ],
     interactables: [
       { id: "street-food-1", x: 800, y: 700, w: 60, h: 60, label: "Eat trash bag", type: "street-food", emoji: "🗑️" },
@@ -711,6 +714,54 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "bt-rack", x: 100, y: 200, w: 120, h: 80, label: "Rack of designer boubous", type: "easter-text", emoji: "👗" },
       { id: "bt-perfume", x: 100, y: 400, w: 80, h: 60, label: "Perfume: 'Eau de Chud'", type: "easter-text", emoji: "🧴" },
       { id: "bt-counter", x: 350, y: 180, w: 200, h: 60, label: "Boutique counter", type: "easter-text", emoji: "💎" },
+    ],
+  },
+
+  airport: {
+    id: "airport", name: "Martin Int'l Airport", width: 1000, height: 700,
+    bgColor: "#c0c8d0", bgPattern: "tile", spawnPos: { x: 500, y: 580 },
+    walls: [
+      { x: 0, y: 0, w: 1000, h: 30 },
+      { x: 0, y: 670, w: 1000, h: 30 },
+      { x: 0, y: 0, w: 30, h: 700 },
+      { x: 970, y: 0, w: 30, h: 700 },
+      // Desk counter
+      { x: 280, y: 180, w: 440, h: 40, color: "#5a6a7a", label: "Control Desk" },
+      // Gate wall
+      { x: 800, y: 300, w: 170, h: 20, color: "#4a5a6a" },
+    ],
+    doors: [
+      { id: "exit", x: 460, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 230, y: 290 }, label: "Outside", color: COLORS.doorway },
+    ],
+    interactables: [
+      { id: "airport-desk", x: 280, y: 180, w: 440, h: 40, label: "Control Desk", type: "airport-desk", emoji: "✈️" },
+      { id: "ap-chair-1", x: 150, y: 350, w: 60, h: 50, label: "Waiting chair", type: "easter-text", emoji: "🪑" },
+      { id: "ap-chair-2", x: 250, y: 350, w: 60, h: 50, label: "Waiting chair", type: "easter-text", emoji: "🪑" },
+      { id: "ap-sign", x: 100, y: 80, w: 120, h: 60, label: "Sign: 'Departures to HELL — Gate 666'", type: "easter-text", emoji: "🛫" },
+      { id: "ap-luggage", x: 700, y: 520, w: 80, h: 60, label: "Lost luggage: a moldy sandwich", type: "easter-text", emoji: "🧳" },
+      { id: "ap-security", x: 100, y: 520, w: 80, h: 60, label: "Security: Cousin is TSA today", type: "easter-text", emoji: "🛂" },
+    ],
+  },
+
+  hell: {
+    id: "hell", name: "The 9th Circle", width: 2000, height: 1500,
+    bgColor: "#1a0505", bgPattern: "hell", spawnPos: { x: 1000, y: 1200 },
+    walls: [
+      { x: 0, y: 0, w: 2000, h: 20 },
+      { x: 0, y: 1480, w: 2000, h: 20 },
+      { x: 0, y: 0, w: 20, h: 1500 },
+      { x: 1980, y: 0, w: 20, h: 1500 },
+    ],
+    doors: [
+      { id: "hell-exit", x: 960, y: 1460, w: 80, h: 40, targetScene: "outside", targetPos: { x: 400, y: 450 }, label: "Return to Town (impossible)", color: "#500000" },
+    ],
+    interactables: [
+      { id: "hell-skull-1", x: 300, y: 300, w: 60, h: 50, label: "A skull. It winks at Martin.", type: "easter-text", emoji: "💀" },
+      { id: "hell-skull-2", x: 1600, y: 400, w: 60, h: 50, label: "Another skull. Judging Martin.", type: "easter-text", emoji: "💀" },
+      { id: "hell-lava", x: 800, y: 600, w: 400, h: 80, label: "Lava river (don't touch)", type: "easter-text", emoji: "🌋" },
+      { id: "hell-sign", x: 900, y: 100, w: 200, h: 60, label: "Sign: 'Abandon all hope, ye who enter here'", type: "easter-text", emoji: "🔥" },
+      { id: "hell-pitchfork", x: 150, y: 800, w: 60, h: 80, label: "Abandoned pitchfork", type: "easter-object", emoji: "🔱" },
+      { id: "hell-egg", x: 1700, y: 1000, w: 80, h: 50, label: "Graffiti: 'Wolf was here first'", type: "easter-text", emoji: "🎨" },
     ],
   },
 };
