@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Page not found</title>
+    <script>
+      // SPA routing fix for GitHub Pages
+      // Redirect all 404s back to the main app
+      var path = window.location.pathname;
+      var base = "/shartinstimulator/";
+      
+      // If already at base or a file path, show the error message
+      if (path === base || path.includes(".")) {
+        // Keep the 404 page visible
+      } else {
+        // Redirect to main app for SPA routing
+        window.location.href = base + window.location.search + window.location.hash;
+      }
+    </script>
+    <style>
+      body {
+        background: linear-gradient(135deg, #1a0a05 0%, #3a1a10 50%, #2a1005 100%);
+        color: #f4c8a8;
+        font-family: 'Courier New', monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      h1 {
+        font-size: 4em;
+        margin: 0;
+        color: #ff6b35;
+        text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+      }
+      p {
+        font-size: 1.2em;
+        margin: 20px 0;
+        color: #d4a080;
+      }
+      a {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 15px 40px;
+        background: linear-gradient(135deg, #d97a30, #f4b860);
+        color: #1a0a05;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.2em;
+        border-radius: 8px;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      a:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(217, 122, 48, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>404</h1>
+    <p>Martin got lost on this street.</p>
+    <p>Probably ate something bad and passed out.</p>
+    <a href="/shartinstimulator/">Go Home</a>
+  </body>
+</html>
