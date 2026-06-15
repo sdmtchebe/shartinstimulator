@@ -36,6 +36,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <div id="error-display" style="display:none; position:fixed; inset:0; background:black; color:white; z-index:9999; padding:20px; font-family:monospace; white-space:pre-wrap;"></div>
+    <script>
+      window.addEventListener('error', function(e) {
+        var d = document.getElementById('error-display');
+        if (d) { d.style.display = 'block'; d.textContent = 'ERROR: ' + e.message + '\n' + (e.stack || ''); }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var d = document.getElementById('error-display');
+        if (d) { d.style.display = 'block'; d.textContent = 'UNHANDLED PROMISE: ' + e.reason; }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
