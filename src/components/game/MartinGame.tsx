@@ -349,7 +349,8 @@ export default function MartinGame() {
   // Init sound when resuming a saved session (skip start screen)
   useEffect(() => {
     if (savedData) {
-      sound.init().then(() => sound.resume());
+      sound.init();
+      sound.resume();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
