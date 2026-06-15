@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA fallback — convert any direct path to a hash route
+      (function() {
+        var l = window.location;
+        var base = '/shartinstimulator/';
+        var path = l.pathname.replace(base, '');
+        if (path && path !== '/') {
+          l.replace(base + '#/' + path + l.search + l.hash);
+        } else {
+          l.replace(base);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

@@ -38,14 +38,4 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-  <script>
-    // Handle GitHub Pages 404 on refresh
-    (function() {
-      var path = window.location.pathname;
-      var base = "/shartinstimulator/";
-      if (path.startsWith(base) && path !== base && !path.includes(".")) {
-        window.history.replaceState(null, null, base);
-      }
-    })();
-  </script>
 </html>

@@ -55,6 +55,17 @@ function makeNpcs(): NpcRuntime[] {
   }));
 }
 
+function mergeNpcs(saved: any[] | undefined): NpcRuntime[] {
+  const current = makeNpcs();
+  if (!saved || !Array.isArray(saved)) return current;
+  const savedById = new Map(saved.map((n) => [n.def?.id, n]));
+  return current.map((n) => {
+    const s = savedById.get(n.def.id);
+    if (!s) return n;
+    return { ...n, ...s, def: n.def };
+  });
+}
+
 function initialStats(): GameStats {
   return {
     money: 0, hunger: 30, chud: 0, day: 1, timeSec: 0, shake: 0,
@@ -80,7 +91,7 @@ function loadSaveData(): { stats: GameStats; martin: MartinState; npcs: NpcRunti
     return {
       stats: { ...initialStats(), ...data.stats },
       martin: { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100, ...data.martin },
-      npcs: data.npcs || makeNpcs(),
+      npcs: mergeNpcs(data.npcs),
     };
   } catch {
     return null;
@@ -125,14 +136,18 @@ export default function MartinGame() {
 
   // Save/Load functions
   const saveGame = useCallback(() => {
-    const saveData = {
-      version: 1,
-      stats: statsRef.current,
-      martin: martinRef.current,
-      npcs: npcsRef.current,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem("martinGameSave", JSON.stringify(saveData));
+    try {
+      const saveData = {
+        version: 1,
+        stats: statsRef.current,
+        martin: martinRef.current,
+        npcs: npcsRef.current,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem("martinGameSave", JSON.stringify(saveData));
+    } catch (e) {
+      console.error("Failed to save game:", e);
+    }
   }, []);
 
   const hasSave = useCallback(() => {
@@ -150,7 +165,7 @@ export default function MartinGame() {
         const data = JSON.parse(saved);
         statsRef.current = { ...initialStats(), ...data.stats };
         martinRef.current = { ...martinRef.current, ...data.martin };
-        npcsRef.current = data.npcs || makeNpcs();
+        npcsRef.current = mergeNpcs(data.npcs);
         return true;
       } catch (e) {
         console.error("Failed to load save:", e);
@@ -882,7 +897,6 @@ export default function MartinGame() {
               statsRef.current.buttplugQuestStep = 1;
               completeQuest("buttplug-quest");
               showToast("📜 New Main Quest: Find MoGgayla's buttplug");
-              saveGame();
               setDialog(null);
             },
           }],
