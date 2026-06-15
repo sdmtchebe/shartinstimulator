@@ -3,20 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Page not found</title>
-    <script>
-      // SPA routing fix for GitHub Pages
-      // Redirect all 404s back to the main app
-      var path = window.location.pathname;
-      var base = "/shartinstimulator/";
-      
-      // If already at base or a file path, show the error message
-      if (path === base || path.includes(".")) {
-        // Keep the 404 page visible
-      } else {
-        // Redirect to main app for SPA routing
-        window.location.href = base + window.location.search + window.location.hash;
-      }
-    </script>
     <style>
       body {
         background: linear-gradient(135deg, #1a0a05 0%, #3a1a10 50%, #2a1005 100%);
