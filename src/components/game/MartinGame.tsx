@@ -88,9 +88,11 @@ function loadSaveData(): { stats: GameStats; martin: MartinState; npcs: NpcRunti
     const saved = localStorage.getItem("martinGameSave");
     if (!saved) return null;
     const data = JSON.parse(saved);
+    const scene = data.martin?.scene ?? "home";
+    const spawnPos = SCENES[scene]?.spawnPos ?? { x: 420, y: 580 };
     return {
       stats: { ...initialStats(), ...data.stats },
-      martin: { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100, ...data.martin },
+      martin: { scene, x: spawnPos.x, y: spawnPos.y, dir: "down", walking: false, walkPhase: 0, hp: data.martin?.hp ?? 100, hpMax: data.martin?.hpMax ?? 100 },
       npcs: mergeNpcs(data.npcs),
     };
   } catch {
@@ -164,7 +166,9 @@ export default function MartinGame() {
       try {
         const data = JSON.parse(saved);
         statsRef.current = { ...initialStats(), ...data.stats };
-        martinRef.current = { ...martinRef.current, ...data.martin };
+        const scene = data.martin?.scene ?? "home";
+        const spawnPos = SCENES[scene]?.spawnPos ?? { x: 420, y: 580 };
+        martinRef.current = { scene, x: spawnPos.x, y: spawnPos.y, dir: "down", walking: false, walkPhase: 0, hp: data.martin?.hp ?? 100, hpMax: data.martin?.hpMax ?? 100 };
         npcsRef.current = mergeNpcs(data.npcs);
         return true;
       } catch (e) {
