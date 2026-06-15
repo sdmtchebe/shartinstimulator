@@ -1133,8 +1133,9 @@ export default function MartinGame() {
             sc.x += (dx2 / dist2) * sp;
             sc.y += (dy2 / dist2) * sp;
           }
-          // Speed scales with night depth
-          sc.speed = 1.0 + (dayProgress - 0.7) * 6;
+          // Speed scales with night depth - calculate dayProgress here to avoid scope issues
+          const dayProgress = stats.timeSec / DAY_LENGTH_SECONDS;
+          sc.speed = 1.0 + Math.max(0, (dayProgress - 0.7) * 6);
           // If caught
           if (dist2 < 45) {
             if (shadowChudCdRef.current <= 0) {
