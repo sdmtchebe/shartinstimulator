@@ -127,6 +127,8 @@ export interface NpcRuntime {
   ballY?: number;
   ballVX?: number;
   ballVY?: number;
+  anger?: number;
+  hp?: number;
 }
 
 export interface FoodItem {

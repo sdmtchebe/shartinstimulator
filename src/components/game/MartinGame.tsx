@@ -52,6 +52,7 @@ function makeNpcs(): NpcRuntime[] {
     ballX: def.behavior === "soccer" ? def.baseX + 30 : undefined,
     ballY: def.behavior === "soccer" ? def.baseY + 30 : undefined,
     ballVX: 0, ballVY: 0,
+    anger: 0, hp: 50,
   }));
 }
 
@@ -1233,7 +1234,10 @@ export default function MartinGame() {
     }
 
     if (npc.def.id === "damian") {
-      choices.push({ label: "Pass the soccer ball",
+      const anger = npc.anger ?? 0;
+      const angerEmojis = ["😐", "😠", "😡", "🤬", "💢", "🤯"];
+      const angerLabel = angerEmojis[Math.min(anger, 5)];
+      choices.push({ label: `Pass the soccer ball ${angerLabel}`,
         onSelect: () => {
           if (npc.ballX !== undefined) {
             const angle = Math.random() * Math.PI * 2;
@@ -1241,6 +1245,55 @@ export default function MartinGame() {
             sound.play("soccerKick");
           }
           showToast("You pass to Damian. He doesn't acknowledge. He kicks back hard."); setDialog(null);
+        } });
+      choices.push({ label: "🦶 Kick ball far away",
+        onSelect: () => {
+          if (npc.ballX !== undefined) {
+            const angle = Math.random() * Math.PI * 2;
+            npc.ballVX = Math.cos(angle) * 18; npc.ballVY = Math.sin(angle) * 18;
+            sound.play("soccerKick");
+          }
+          npc.anger = (npc.anger ?? 0) + 1;
+          const newAnger = npc.anger ?? 0;
+          if (newAnger >= 5) {
+            npc.anger = 0;
+            showToast("Damian has a MELTDOWN! He screams silently, runs in circles, then forgets why he was angry.");
+            sound.play("miss");
+          } else {
+            const angerLines = [
+              "Damian stares at you. His eye twitches.",
+              "Damian clenches his tiny fists. He's fuming.",
+              "Damian points at the ball, then at you. Accusation.",
+              "Damian kicks the ground. He's PISSED.",
+              "Damian is about to EXPLODE. His face is red.",
+            ];
+            showToast(angerLines[Math.min(newAnger - 1, 4)]);
+            sound.play("swish");
+          }
+          setDialog(null);
+        } });
+      choices.push({ label: "👊 Hit Damian",
+        onSelect: () => {
+          npc.anger = (npc.anger ?? 0) + 1;
+          npc.hp = (npc.hp ?? 50) - (5 + Math.floor(Math.random() * 6));
+          const newAnger = npc.anger ?? 0;
+          if (newAnger >= 5) {
+            npc.anger = 0;
+            showToast("Damian has a MELTDOWN! He screams silently, runs in circles, then forgets why he was angry.");
+            sound.play("miss");
+          } else {
+            const hitLines = [
+              "Damian stares in shock. He didn't see that coming.",
+              "Damian rubs his head. He looks betrayed.",
+              "Damian starts to cry. Then he stops. Then he glares.",
+              "Damian is FURIOUS. He chases his own tail in anger.",
+              "Damian is about to EXPLODE. His face is red.",
+            ];
+            showToast(hitLines[Math.min(newAnger - 1, 4)]);
+            sound.play("punch");
+          }
+          statsRef.current.shake = 4;
+          setDialog(null);
         } });
     }
     if (npc.def.id === "mcmoggayla") {
@@ -1457,14 +1510,16 @@ export default function MartinGame() {
 
       if (m.scene === "hell" && !stats.hellDefeated) {
         if (!hellBossRef.current) {
-          hellBossRef.current = { hp: 500, hpMax: 500, x: 1000, y: 750, punchCd: 0, barrageCd: 0, walkPhase: 0, dir: "down" };
+          hellBossRef.current = { hp: 750, hpMax: 750, x: 1000, y: 750, punchCd: 0, barrageCd: 0, slamCd: 0, walkPhase: 0, dir: "down" };
         }
         const boss = hellBossRef.current;
         const bdx = m.x - boss.x;
         const bdy = m.y - boss.y;
         const bd = Math.hypot(bdx, bdy);
+        // Speed increases as HP drops: 0.8 -> 1.2 when low HP
+        const enrageMult = 1 + (1 - boss.hp / boss.hpMax) * 0.5;
         if (bd > 100) {
-          const bsp = 0.8 * (dt / 16);
+          const bsp = 0.8 * enrageMult * (dt / 16);
           boss.x += (bdx / bd) * bsp;
           boss.y += (bdy / bd) * bsp;
         }
@@ -1473,28 +1528,77 @@ export default function MartinGame() {
           else boss.dir = bdy > 0 ? "down" : "up";
         }
         boss.walkPhase += dt / 200;
+        // Punch attack
         if (bd < 120 && boss.punchCd <= 0) {
-          martinRef.current.hp = Math.max(0, martinRef.current.hp - 20);
-          boss.punchCd = 1500;
+          martinRef.current.hp = Math.max(0, martinRef.current.hp - 25);
+          boss.punchCd = 1200;
           stats.shake = 8;
           sound.play("punch");
-          showToast("Charle punches you! -20 HP");
+          showToast("Charle punches you! -25 HP");
         }
-        if (bd > 150 && bd < 400 && boss.barrageCd <= 0) {
-          for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            hellProjectilesRef.current.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * 3, vy: Math.sin(angle) * 3, damage: 15, active: true, emoji: "🏀" });
+        // Basketball barrage: 16 projectiles
+        if (bd > 150 && bd < 450 && boss.barrageCd <= 0) {
+          for (let i = 0; i < 16; i++) {
+            const angle = (i / 16) * Math.PI * 2;
+            const spd = 3 + Math.random() * 1.5;
+            hellProjectilesRef.current.push({ x: boss.x, y: boss.y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd, damage: 18, active: true, emoji: "🏀" });
           }
-          boss.barrageCd = 3000;
+          boss.barrageCd = 2500;
           sound.play("swish");
-          showToast("Charle unleashes a basketball barrage!");
+          showToast("Charle unleashes a MASSIVE basketball barrage!");
+        }
+        // Shockwave slam: boss jumps, expanding ring damage
+        if (bd > 80 && bd < 350 && boss.slamCd <= 0) {
+          boss.slamCd = 5000;
+          sound.play("punch");
+          showToast("Charle SLAMS the ground! Shockwave incoming!");
+          // Create expanding ring projectile
+          hellProjectilesRef.current.push({ x: boss.x, y: boss.y, vx: 0, vy: 0, damage: 30, active: true, emoji: "💥" });
         }
         boss.punchCd -= dt;
         boss.barrageCd -= dt;
+        boss.slamCd -= dt;
+        // Minion basketballs: spawn bouncing balls that wander
+        if (Math.random() < 0.008 * enrageMult) {
+          const mx = 100 + Math.random() * 1800;
+          const my = 100 + Math.random() * 1300;
+          const mangle = Math.random() * Math.PI * 2;
+          const mspd = 1.5 + Math.random() * 1.5;
+          hellProjectilesRef.current.push({ x: mx, y: my, vx: Math.cos(mangle) * mspd, vy: Math.sin(mangle) * mspd, damage: 12, active: true, emoji: "🔥" });
+        }
         for (const proj of hellProjectilesRef.current) {
           if (!proj.active) continue;
           proj.x += proj.vx * (dt / 16);
           proj.y += proj.vy * (dt / 16);
+          // Bouncing minions
+          if (proj.emoji === "🔥") {
+            if (proj.x < 50 || proj.x > scene.width - 50) proj.vx *= -1;
+            if (proj.y < 50 || proj.y > scene.height - 50) proj.vy *= -1;
+            const pd = dist(proj.x, proj.y, m.x, m.y);
+            if (pd < 40) {
+              martinRef.current.hp = Math.max(0, martinRef.current.hp - proj.damage);
+              proj.active = false;
+              stats.shake = 4;
+              sound.play("cousinChomp");
+              showToast(`Minion basketball hit! -${proj.damage} HP`);
+            }
+            continue;
+          }
+          // Shockwave ring: expands outward, hits once
+          if (proj.emoji === "💥") {
+            const ringRadius = (proj.x - boss.x) + 4 * (dt / 16); // expand outward
+            proj.x = boss.x + ringRadius;
+            const ringDist = dist(m.x, m.y, boss.x, boss.y);
+            if (ringDist < ringRadius + 30 && ringDist > ringRadius - 30) {
+              martinRef.current.hp = Math.max(0, martinRef.current.hp - proj.damage);
+              proj.active = false;
+              stats.shake = 10;
+              sound.play("punch");
+              showToast("Shockwave hits! -30 HP");
+            }
+            if (ringRadius > 400) proj.active = false;
+            continue;
+          }
           if (proj.emoji === "💨") {
             if (boss) {
               const bdist = dist(proj.x, proj.y, boss.x, boss.y);
@@ -1522,12 +1626,12 @@ export default function MartinGame() {
         }
         hellProjectilesRef.current = hellProjectilesRef.current.filter((p) => p.active);
         if (gunSpawnCdRef.current <= 0) {
-          hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "gun", active: true, timer: 0, lifetime: 15000 });
-          gunSpawnCdRef.current = 8000 + Math.random() * 4000;
+          hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "gun", active: true, timer: 0, lifetime: 12000 });
+          gunSpawnCdRef.current = 6000 + Math.random() * 4000;
         }
         if (foodSpawnCdRef.current <= 0) {
-          hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "food", active: true, timer: 0, lifetime: 20000 });
-          foodSpawnCdRef.current = 10000 + Math.random() * 5000;
+          hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "food", active: true, timer: 0, lifetime: 15000 });
+          foodSpawnCdRef.current = 8000 + Math.random() * 5000;
         }
         gunSpawnCdRef.current -= dt;
         foodSpawnCdRef.current -= dt;
@@ -1602,12 +1706,12 @@ export default function MartinGame() {
       // Hunger / chud
       if (!stats.dead && !dialogActive) {
         stats.hunger = clamp(stats.hunger + dtSec * 1.4, 0, 100);
-        if (stats.hunger >= 100) stats.chud = clamp(stats.chud + dtSec * 2, 0, 100);
+        if (stats.hunger >= 100) stats.chud = clamp(stats.chud + dtSec * 0.8, 0, 100);
       }
-      if (!stats.dead && !dialogActive && !m.walking && m.scene === "home") stats.chud = clamp(stats.chud + dtSec * 0.5, 0, 100);
-      if (!stats.dead && !dialogActive && !m.walking) stats.chud = clamp(stats.chud + dtSec * 0.15, 0, 100);
+      if (!stats.dead && !dialogActive && !m.walking && m.scene === "home") stats.chud = clamp(stats.chud + dtSec * 0.3, 0, 100);
+      if (!stats.dead && !dialogActive && !m.walking) stats.chud = clamp(stats.chud + dtSec * 0.08, 0, 100);
 
-      if (stats.chud >= 90) sound.startAlarm(); else sound.stopAlarm();
+
 
       // Night flag (used for shadow chud and quests)
       const isNight = stats.timeSec / DAY_LENGTH_SECONDS > 0.7;
