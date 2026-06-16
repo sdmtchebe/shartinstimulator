@@ -1983,6 +1983,7 @@ export default function MartinGame() {
         } else if (flight.phase === "landing" && flight.timer > 1500) {
           flightAnimRef.current = null;
           setFlightAnim(null);
+          statsRef.current.hellDefeated = false; // Boss respawns
           martinRef.current.scene = "hell";
           martinRef.current.x = 1000;
           martinRef.current.y = 1200;
