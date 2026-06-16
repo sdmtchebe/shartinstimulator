@@ -1987,6 +1987,7 @@ export default function MartinGame() {
           martinRef.current.scene = "hell";
           martinRef.current.x = 1000;
           martinRef.current.y = 1200;
+          martinRef.current.hp = 100; // Full heal before fight
           triggerTransition();
           sound.play("door");
           showToast("✈️ Welcome to HELL. Enjoy your stay.");
