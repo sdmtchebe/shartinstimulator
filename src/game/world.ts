@@ -223,7 +223,7 @@ export const CALL_SCRIPTS: Record<string, { greeting: string; exchanges: [string
 
 export const NPC_DEFS: NpcDef[] = [
   {
-    id: "charle", name: "Charle", homeScene: "court", baseX: 360, baseY: 320,
+    id: "charle", name: "Charle", homeScene: "tutorat", baseX: 360, baseY: 320,
     color: "#e89060", hairColor: "#d24a18", size: 22,
     description: "A fat little ginger guy. He loves basketball.",
     transformForm: "basketball", transformLabel: "rendre charle une balle de basket",
@@ -232,6 +232,11 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🏀", "😅", "🥺"],
     defaultMood: "happy",
     specialAction: { label: "Challenge to HORSE ($10 bet)", emoji: "🏀" },
+    schedule: [
+      { startHour: 8, endHour: 17, scene: "tutorat", activity: "guard", targetX: 450, targetY: 400 },
+      { startHour: 17, endHour: 19, scene: "fightclub", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "tutorat", activity: "static" },
+    ],
   },
   {
     id: "damian", name: "Damian", homeScene: "outside", baseX: 1100, baseY: 760,
@@ -243,6 +248,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["⚽", "👀", "..."],
     defaultMood: "neutral",
     specialAction: { label: "Steal his soccer ball (+$5, he cries)", emoji: "⚽" },
+    schedule: [
+      { startHour: 8, endHour: 12, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
+      { startHour: 12, endHour: 15, scene: "gym", activity: "wander" },
+      { startHour: 15, endHour: 17, scene: "tutorat", activity: "wander" },
+      { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "outside", activity: "static" },
+    ],
   },
   {
     id: "wolf-npc", name: "Wolf Shartos Bartos Bobitos", homeScene: "outside",
@@ -254,6 +266,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["⌚", "⚽", "😤"],
     defaultMood: "smug",
     specialAction: { label: "Ask to see the watch (wastes 15 min)", emoji: "⌚" },
+    schedule: [
+      { startHour: 10, endHour: 14, scene: "outside", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "cartier", activity: "wander" },
+      { startHour: 16, endHour: 18, scene: "gym", activity: "wander" },
+      { startHour: 18, endHour: 19, scene: "outside", activity: "wander" },
+      { startHour: 19, endHour: 10, scene: "outside", activity: "static" },
+    ],
   },
   {
     id: "konstantin", name: "Konstantin", homeScene: "outside", baseX: 600, baseY: 1200,
@@ -265,6 +284,12 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🇧🇬", "🍻", "😡"],
     defaultMood: "angry",
     specialAction: { label: "Drink rakia with him (-15 hunger, +8 chud)", emoji: "🍻" },
+    schedule: [
+      { startHour: 11, endHour: 14, scene: "nelly", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "outside", activity: "wander" },
+      { startHour: 16, endHour: 19, scene: "nelly", activity: "wander" },
+      { startHour: 19, endHour: 11, scene: "nelly", activity: "static" },
+    ],
   },
   {
     id: "kai", name: "Kai", homeScene: "chudzone", baseX: 350, baseY: 350,
@@ -276,6 +301,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🕯️", "🤤"],
     defaultMood: "shocked",
     specialAction: { label: "Dare him to eat something horrible (+10 chud each)", emoji: "🕯️" },
+    schedule: [
+      { startHour: 10, endHour: 13, scene: "outside", activity: "eat" },
+      { startHour: 13, endHour: 15, scene: "chudzone", activity: "wander" },
+      { startHour: 15, endHour: 18, scene: "outside", activity: "wander" },
+      { startHour: 18, endHour: 19, scene: "outside", activity: "eat" },
+      { startHour: 19, endHour: 10, scene: "outside", activity: "static" },
+    ],
   },
   {
     id: "david", name: "David", homeScene: "outside", baseX: 2000, baseY: 1300,
@@ -287,6 +319,12 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🇮🇱", "🥙", "😅"],
     defaultMood: "happy",
     specialAction: { label: "Accept hummus (-20 hunger, -3 chud)", emoji: "🥙" },
+    schedule: [
+      { startHour: 9, endHour: 12, scene: "outside", activity: "wander" },
+      { startHour: 12, endHour: 14, scene: "gym", activity: "wander" },
+      { startHour: 14, endHour: 19, scene: "outside", activity: "watchTV" },
+      { startHour: 19, endHour: 9, scene: "outside", activity: "static" },
+    ],
   },
   {
     id: "anish", name: "Anish", homeScene: "chudzone", baseX: 600, baseY: 380,
@@ -298,6 +336,11 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🤡", "🗑️", "😬"],
     defaultMood: "smug",
     specialAction: { label: "Watch his stand-up (+15 chud, pure suffering)", emoji: "🎤" },
+    schedule: [
+      { startHour: 8, endHour: 17, scene: "asbestos", activity: "wander" },
+      { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "asbestos", activity: "static" },
+    ],
   },
   {
     id: "moggayla", name: "Moggayla", homeScene: "moggayla", baseX: 500, baseY: 380,
@@ -309,9 +352,12 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["⚫", "😴"],
     defaultMood: "neutral",
     specialAction: { label: "Bring her moldy food (-5 chud)", emoji: "🍖" },
+    schedule: [
+      { startHour: 0, endHour: 24, scene: "moggayla", activity: "static" },
+    ],
   },
   {
-    id: "caillo", name: "Caillo Qui Casse les Couilles", homeScene: "tutorat",
+    id: "caillo", name: "Caillo Qui Casse les Couilles", homeScene: "outside",
     baseX: 540, baseY: 400, color: "#f4d7b8", hairColor: "#5a3520", size: 20,
     description: "The most annoying student ever. Pays for tutorat.",
     transformForm: "rock", transformLabel: "turn Caillo into a literal rock",
@@ -320,8 +366,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🤔", "🧱", "📚"],
     defaultMood: "scared",
     specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
+    schedule: [
+      { startHour: 7, endHour: 15, scene: "tutorat", activity: "wander" },
+      { startHour: 15, endHour: 17, scene: "outside", activity: "wander" },
+      { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
+      { startHour: 19, endHour: 7, scene: "outside", activity: "static" },
+    ],
   },
-  // 1. Rename "Cousin Roy" → "Cousin" everywhere in NPC def
   {
     id: "cousin-roy", name: "Cousin", homeScene: "basement", baseX: 400, baseY: 280,
     color: "#5a3a28", hairColor: "#1a0a05", size: 70,
@@ -332,6 +383,9 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🍖", "🩸", "👹"],
     defaultMood: "angry",
     specialAction: { label: "Throw him a bone (-10 chud, 5s safe)", emoji: "🦴" },
+    schedule: [
+      { startHour: 0, endHour: 24, scene: "basement", activity: "stare" },
+    ],
   },
   {
     id: "mom", name: "Mom", homeScene: "upstairs", baseX: 360, baseY: 280,
@@ -343,6 +397,10 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["📺", "💢", "🚬"],
     defaultMood: "sad",
     specialAction: { label: "Clean the ashtray (+10 HP, she notices)", emoji: "🚬" },
+    schedule: [
+      { startHour: 6, endHour: 22, scene: "upstairs", activity: "watchTV" },
+      { startHour: 22, endHour: 6, scene: "upstairs", activity: "static" },
+    ],
   },
   {
     id: "mcmoggayla", name: "McMoggayla", homeScene: "stripclub", baseX: 500, baseY: 280,
@@ -354,6 +412,9 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["💵", "💃", "💥"],
     defaultMood: "horny",
     specialAction: { label: "Request private show ($15, +12 chud)", emoji: "💃" },
+    schedule: [
+      { startHour: 0, endHour: 24, scene: "stripclub", activity: "dance" },
+    ],
   },
   {
     id: "carl", name: "Carl the Fisherman", homeScene: "fishing", baseX: 200, baseY: 280,
@@ -365,6 +426,11 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🎣", "🐟", "😶"],
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
+    schedule: [
+      { startHour: 8, endHour: 18, scene: "fishing", activity: "wander" },
+      { startHour: 18, endHour: 19, scene: "nelly", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "fishing", activity: "static" },
+    ],
   },
   {
     id: "moggayla-bt", name: "MoGgayla", homeScene: "boutique", baseX: 450, baseY: 320,
@@ -375,6 +441,9 @@ export const NPC_DEFS: NpcDef[] = [
     chatLines: ["Martin darling...", "my boutique, my rules", "travel awaits us both"],
     reactionEmojis: ["💕", "⚫", "✨"],
     defaultMood: "happy",
+    schedule: [
+      { startHour: 0, endHour: 24, scene: "boutique", activity: "static" },
+    ],
   },
   {
     id: "boss-charle", name: "Charle the Colossus", homeScene: "hell", baseX: 1000, baseY: 750,
@@ -385,6 +454,9 @@ export const NPC_DEFS: NpcDef[] = [
     chatLines: ["I AM THE GAME", "YOU CANNOT WIN", "CHARLE IS ETERNAL"],
     reactionEmojis: ["🏀", "😤"],
     defaultMood: "angry",
+    schedule: [
+      { startHour: 0, endHour: 24, scene: "hell", activity: "static" },
+    ],
   },
 ];
 

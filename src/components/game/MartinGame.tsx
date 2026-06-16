@@ -53,6 +53,7 @@ function makeNpcs(): NpcRuntime[] {
     ballY: def.behavior === "soccer" ? def.baseY + 30 : undefined,
     ballVX: 0, ballVY: 0,
     anger: 0, hp: 50,
+    asleep: false,
   }));
 }
 
@@ -1852,7 +1853,22 @@ export default function MartinGame() {
           moggaylaBt.y = 300;
         }
       }
+
+      const currentHour = (stats.timeSec / DAY_LENGTH_SECONDS) * 24;
       const npcs = npcsRef.current;
+
+      function getCurrentScheduleEntry(npc: NpcRuntime, hour: number) {
+        if (!npc.def.schedule) return null;
+        for (const entry of npc.def.schedule) {
+          if (entry.startHour < entry.endHour) {
+            if (hour >= entry.startHour && hour < entry.endHour) return entry;
+          } else {
+            if (hour >= entry.startHour || hour < entry.endHour) return entry;
+          }
+        }
+        return null;
+      }
+
       for (const n of npcs) {
         if (n.reactionTimer > 0) { n.reactionTimer -= dt; if (n.reactionTimer <= 0) n.reactionEmoji = null; }
         if (n.speechTimer > 0) { n.speechTimer -= dt; if (n.speechTimer <= 0) n.speechBubble = null; }
@@ -1860,19 +1876,50 @@ export default function MartinGame() {
         if (n.transformed) continue;
         n.activityTimer -= dt;
 
-        if (n.def.staticSpot) {
-          // Static NPCs don't move; reset to base pos
-          if (Math.abs(n.x - n.def.baseX) > 1 || Math.abs(n.y - n.def.baseY) > 1) {
-            n.x += (n.def.baseX - n.x) * 0.05;
-            n.y += (n.def.baseY - n.y) * 0.05;
+        const entry = getCurrentScheduleEntry(n, currentHour);
+
+        let targetScene = n.def.homeScene;
+        let targetActivity: NpcActivity = "static";
+        let targetX = n.def.baseX;
+        let targetY = n.def.baseY;
+        let isAsleep = false;
+
+        if (entry) {
+          targetScene = entry.scene;
+          targetActivity = entry.activity;
+          targetX = entry.targetX ?? (entry.scene === n.def.homeScene ? n.def.baseX : (SCENES[entry.scene]?.spawnPos.x ?? 400));
+          targetY = entry.targetY ?? (entry.scene === n.def.homeScene ? n.def.baseY : (SCENES[entry.scene]?.spawnPos.y ?? 400));
+          isAsleep = entry.startHour > entry.endHour;
+        } else {
+          const noSleepAt19 = ["mom", "mcmoggayla", "cousin-roy", "moggayla", "boss-charle"];
+          if (currentHour >= 19 && !noSleepAt19.includes(n.def.id)) {
+            isAsleep = true;
+          } else {
+            targetActivity = n.def.behavior;
           }
-          n.thoughtTimer -= dt;
-          if (n.thoughtTimer <= 0) {
-            n.thoughtTimer = 4000 + Math.random() * 3000;
-            if (n.def.chatLines && Math.random() < 0.5) {
-              n.speechBubble = randomChoice(n.def.chatLines); n.speechTimer = 2500;
-            }
-          }
+        }
+
+        // Apply teleportation if scene changed
+        if (n.scene !== targetScene) {
+          n.scene = targetScene;
+          n.x = targetX;
+          n.y = targetY;
+          n.targetX = targetX;
+          n.targetY = targetY;
+        }
+
+        const wasAsleep = n.asleep;
+        n.asleep = isAsleep;
+        n.activity = targetActivity;
+
+        if (wasAsleep && !n.asleep) {
+          n.emotion = "angry";
+          n.emotionTimer = 3000;
+        }
+
+        if (n.asleep) {
+          n.speechBubble = null;
+          n.speechTimer = 0;
           continue;
         }
 
@@ -1900,21 +1947,74 @@ export default function MartinGame() {
           }
         }
 
+        // Activity-based behavior
+        if (n.activity === "static" || n.activity === "watchTV") {
+          n.targetX = targetX;
+          n.targetY = targetY;
+          n.thoughtTimer -= dt;
+          if (n.thoughtTimer <= 0) {
+            n.thoughtTimer = 3000 + Math.random() * 2000;
+            if (n.activity === "watchTV" && Math.random() < 0.4) {
+              n.speechBubble = randomChoice(["...mhm", "shut up Martin im watching TV", "did you take out the trash", "your father called"]);
+              n.speechTimer = 2500;
+            } else if (n.def.chatLines && Math.random() < 0.3) {
+              n.speechBubble = randomChoice(n.def.chatLines);
+              n.speechTimer = 2500;
+            }
+          }
+        } else if (n.activity === "guard") {
+          n.thoughtTimer -= dt;
+          if (n.thoughtTimer <= 0) {
+            n.thoughtTimer = 2000 + Math.random() * 2000;
+            n.targetX = clamp(targetX + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
+            n.targetY = clamp(targetY + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
+          }
+        } else if (n.activity === "dance") {
+          n.thoughtTimer -= dt;
+          if (n.thoughtTimer <= 0) {
+            n.thoughtTimer = 1000 + Math.random() * 1000;
+            n.targetX = clamp(targetX + randomInt(-40, 40), 60, SCENES[n.scene].width - 60);
+            n.targetY = clamp(targetY + randomInt(-40, 40), 60, SCENES[n.scene].height - 60);
+          }
+        } else if (n.activity === "stare") {
+          n.targetX = n.x;
+          n.targetY = n.y;
+          const mdx = m.x - n.x, mdy = m.y - n.y;
+          if (Math.abs(mdx) > Math.abs(mdy)) n.facingDir = mdx > 0 ? "right" : "left";
+          else n.facingDir = mdy > 0 ? "down" : "up";
+          n.thoughtTimer -= dt;
+          if (n.thoughtTimer <= 0) {
+            n.thoughtTimer = 2500 + Math.random() * 2000;
+            if (n.def.chatLines && Math.random() < 0.3) {
+              n.speechBubble = randomChoice(n.def.chatLines);
+              n.speechTimer = 2500;
+            }
+          }
+        } else if (n.activity === "eat") {
+          n.thoughtTimer -= dt;
+          if (n.thoughtTimer <= 0) {
+            n.thoughtTimer = 2000 + Math.random() * 2000;
+            if (Math.random() < 0.4) {
+              n.speechBubble = randomChoice(["*munch munch*", "this is good", "more food", "eating is life"]);
+              n.speechTimer = 2500;
+            }
+          }
+        }
+
         // Activity changes (chat with other NPCs)
         if (n.activity === "chat") {
           if (n.activityTimer <= 0) {
-            n.activity = n.def.behavior === "soccer" ? "soccer" : "wander";
+            n.activity = "wander";
             n.partnerId = null;
             n.thoughtTimer = 1500 + Math.random() * 2000;
           }
-        } else if (n.activity === "wander" || n.activity === "soccer") {
-          // Try to start chat with nearby NPC
+        } else if (n.activity === "wander" || n.activity === "chat") {
           if (Math.random() < 0.003 && !n.def.isDeaf) {
             for (const other of npcs) {
               if (other === n || other.scene !== n.scene || other.transformed) continue;
               if (other.def.staticSpot || other.def.isDeaf) continue;
-              if (other.activity !== "wander") continue;
-              if (dist(n.x, n.y, other.x, other.y) < 90) {
+              if (other.activity !== "wander" && other.activity !== "chat") continue;
+              if (dist(n.x, n.y, other.x, other.y) < 80) {
                 n.activity = "chat"; other.activity = "chat";
                 n.partnerId = other.def.id; other.partnerId = n.def.id;
                 const dur = 4000 + Math.random() * 2000;
@@ -1928,14 +2028,13 @@ export default function MartinGame() {
         }
 
         // Wander targets
-        if (n.activity !== "chat") {
+        if (n.activity === "wander" || n.activity === "guard" || n.activity === "dance" || n.activity === "eat") {
           n.thoughtTimer -= dt;
           if (n.thoughtTimer <= 0) {
             n.thoughtTimer = 1500 + Math.random() * 3000;
             const range = Math.random() > 0.85 ? 250 : 90;
-            n.targetX = clamp(n.def.baseX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
-            n.targetY = clamp(n.def.baseY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
-            // Random speech bubble
+            n.targetX = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
+            n.targetY = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
             if (n.def.chatLines && Math.random() < 0.15) {
               n.speechBubble = randomChoice(n.def.chatLines); n.speechTimer = 2200;
             }
@@ -2238,7 +2337,16 @@ function render(
   for (const n of npcs) {
     if (n.scene !== scene.id) continue;
     if (n.def.id === "boss-charle") continue;
-    drawNpc(ctx, n);
+    if (n.asleep) {
+      ctx.globalAlpha = 0.6;
+      drawNpc(ctx, n);
+      ctx.globalAlpha = 1;
+      ctx.font = "20px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("💤", n.x, n.y - n.def.size - 20);
+      ctx.textBaseline = "alphabetic";
+    } else {
+      drawNpc(ctx, n);
+    }
     if (n.speechBubble) drawSpeechBubble(ctx, n.x, n.y - n.def.size - 28, n.speechBubble);
     if (n.reactionEmoji) drawReaction(ctx, n.x + n.def.size, n.y - n.def.size - 8, n.reactionEmoji);
     if (!n.transformed && dist(n.x, n.y, m.x, m.y) < 70 + n.def.size) {

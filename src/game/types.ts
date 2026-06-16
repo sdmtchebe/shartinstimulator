@@ -69,7 +69,16 @@ export interface SceneDef {
 }
 
 export type NpcMood = "happy" | "neutral" | "angry" | "shocked" | "scared" | "horny" | "smug" | "sad";
-export type NpcActivity = "wander" | "static" | "soccer" | "watchTV" | "guard" | "chat" | "stare" | "dance";
+export type NpcActivity = "wander" | "static" | "soccer" | "watchTV" | "guard" | "chat" | "stare" | "dance" | "eat";
+
+export type NpcScheduleEntry = {
+  startHour: number; // 0-24, e.g., 8 for 8 AM
+  endHour: number; // 0-24, e.g., 12 for 12 PM
+  scene: SceneId; // where they go
+  activity: NpcActivity; // what they do there
+  targetX?: number; // optional specific spot
+  targetY?: number; // optional specific spot
+};
 
 export interface NpcSpecialAction {
   label: string;
@@ -97,6 +106,7 @@ export interface NpcDef {
   reactionEmojis?: string[];
   specialAction?: NpcSpecialAction;
   defaultMood?: NpcMood;
+  schedule?: NpcScheduleEntry[];
 }
 
 export interface NpcRuntime {
@@ -129,6 +139,7 @@ export interface NpcRuntime {
   ballVY?: number;
   anger?: number;
   hp?: number;
+  asleep?: boolean;
 }
 
 export interface FoodItem {
