@@ -1703,13 +1703,13 @@ export default function MartinGame() {
         stats.shake *= 0.85;
       }
 
-      // Hunger / chud
-      if (!stats.dead && !dialogActive) {
+      // Hunger / chud (no chud buildup in hell during boss fight)
+      if (!stats.dead && !dialogActive && m.scene !== "hell") {
         stats.hunger = clamp(stats.hunger + dtSec * 1.4, 0, 100);
         if (stats.hunger >= 100) stats.chud = clamp(stats.chud + dtSec * 0.8, 0, 100);
       }
       if (!stats.dead && !dialogActive && !m.walking && m.scene === "home") stats.chud = clamp(stats.chud + dtSec * 0.3, 0, 100);
-      if (!stats.dead && !dialogActive && !m.walking) stats.chud = clamp(stats.chud + dtSec * 0.08, 0, 100);
+      if (!stats.dead && !dialogActive && !m.walking && m.scene !== "hell") stats.chud = clamp(stats.chud + dtSec * 0.08, 0, 100);
 
 
 
