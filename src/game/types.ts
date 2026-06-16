@@ -140,6 +140,8 @@ export interface NpcRuntime {
   anger?: number;
   hp?: number;
   asleep?: boolean;
+  stalking?: boolean;
+  pickpocketCd?: number;
 }
 
 export interface FoodItem {

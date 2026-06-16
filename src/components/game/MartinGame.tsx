@@ -53,7 +53,7 @@ function makeNpcs(): NpcRuntime[] {
     ballY: def.behavior === "soccer" ? def.baseY + 30 : undefined,
     ballVX: 0, ballVY: 0,
     anger: 0, hp: 50,
-    asleep: false,
+    asleep: false, stalking: false, pickpocketCd: 0,
   }));
 }
 
@@ -2037,6 +2037,47 @@ export default function MartinGame() {
             n.targetY = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
             if (n.def.chatLines && Math.random() < 0.15) {
               n.speechBubble = randomChoice(n.def.chatLines); n.speechTimer = 2200;
+            }
+          }
+        }
+
+        // Konstantin pickpocket behavior
+        if (n.def.id === "konstantin" && !n.asleep && n.scene === m.scene) {
+          n.pickpocketCd = Math.max(0, (n.pickpocketCd ?? 0) - dt);
+          if (n.stalking) {
+            n.targetX = m.x;
+            n.targetY = m.y;
+            const dToPlayer = dist(n.x, n.y, m.x, m.y);
+            if (dToPlayer < 50) {
+              // Pickpocket!
+              const stealAmount = Math.min(100, statsRef.current.money);
+              if (stealAmount > 0) {
+                statsRef.current.money -= stealAmount;
+                n.stalking = false;
+                n.pickpocketCd = 30000 + Math.random() * 20000; // 30-50s cooldown
+                n.reactionEmoji = "💰"; n.reactionTimer = 2000;
+                sound.play("coin");
+                showToast(`Konstantin pickpocketed you! -$${stealAmount} gone! He drinks it away at Nelly's.`);
+                n.speechBubble = "Thanks for the donation, peasant!";
+                n.speechTimer = 2500;
+              } else {
+                n.stalking = false;
+                n.pickpocketCd = 15000; // shorter cooldown if no money
+                n.reactionEmoji = "🙄"; n.reactionTimer = 2000;
+                showToast("Konstantin tried to pickpocket you but you're broke. He looks disappointed.");
+              }
+            } else if (dToPlayer > 300) {
+              // Lost the player, give up
+              n.stalking = false;
+              n.reactionEmoji = "😤"; n.reactionTimer = 1500;
+            } else {
+              n.reactionEmoji = "🥷"; n.reactionTimer = 300;
+            }
+          } else if ((n.pickpocketCd ?? 0) <= 0 && !n.stalking) {
+            // Small chance to start stalking: ~1.5% per second
+            if (Math.random() < 0.000015 * dt) {
+              n.stalking = true;
+              n.reactionEmoji = "👀"; n.reactionTimer = 1500;
             }
           }
         }
