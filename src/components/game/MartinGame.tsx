@@ -1516,10 +1516,10 @@ export default function MartinGame() {
         const bdx = m.x - boss.x;
         const bdy = m.y - boss.y;
         const bd = Math.hypot(bdx, bdy);
-        // Speed increases as HP drops: 0.8 -> 1.2 when low HP
+        // Speed increases as HP drops: 0.35 -> 0.52 when low HP
         const enrageMult = 1 + (1 - boss.hp / boss.hpMax) * 0.5;
         if (bd > 100) {
-          const bsp = 0.8 * enrageMult * (dt / 16);
+          const bsp = 0.35 * enrageMult * (dt / 16);
           boss.x += (bdx / bd) * bsp;
           boss.y += (bdy / bd) * bsp;
         }
