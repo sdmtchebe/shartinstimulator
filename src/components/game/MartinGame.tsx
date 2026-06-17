@@ -82,6 +82,7 @@ function initialStats(): GameStats {
     questsCompleted: ["wake-up"], scenesVisited: ["home"],
     tutorialStep: 0,
     buttplugQuestStep: 0, hasHummus: false, hasButtplug: false, hellDefeated: false, hasTicket: false,
+    apartmentKeys: [],
   };
 }
 
@@ -93,7 +94,7 @@ function loadSaveData(): { stats: GameStats; martin: MartinState; npcs: NpcRunti
     const scene = data.martin?.scene ?? "home";
     const spawnPos = SCENES[scene]?.spawnPos ?? { x: 420, y: 580 };
     return {
-      stats: { ...initialStats(), ...data.stats, hellDefeated: data.stats?.hellDefeated ?? false },
+      stats: { ...initialStats(), ...data.stats, hellDefeated: data.stats?.hellDefeated ?? false, apartmentKeys: data.stats?.apartmentKeys ?? [] },
       martin: { scene, x: spawnPos.x, y: spawnPos.y, dir: "down", walking: false, walkPhase: 0, hp: data.martin?.hp ?? 100, hpMax: data.martin?.hpMax ?? 100 },
       npcs: mergeNpcs(data.npcs),
     };
@@ -176,7 +177,7 @@ export default function MartinGame() {
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        statsRef.current = { ...initialStats(), ...data.stats, hellDefeated: data.stats?.hellDefeated ?? false };
+        statsRef.current = { ...initialStats(), ...data.stats, hellDefeated: data.stats?.hellDefeated ?? false, apartmentKeys: data.stats?.apartmentKeys ?? [] };
         const scene = data.martin?.scene ?? "home";
         const spawnPos = SCENES[scene]?.spawnPos ?? { x: 420, y: 580 };
         martinRef.current = { scene, x: spawnPos.x, y: spawnPos.y, dir: "down", walking: false, walkPhase: 0, hp: data.martin?.hp ?? 100, hpMax: data.martin?.hpMax ?? 100 };
@@ -1410,9 +1411,37 @@ export default function MartinGame() {
               saveGame();
               return;
             }
+            if (it.id === "apt-key-1") {
+              statsRef.current.apartmentKeys.push("apt-door-1");
+              showToast("Found a key! It has 'Damian' written on it.");
+              sound.play("coin");
+              saveGame();
+              return;
+            }
+            if (it.id === "apt-key-2") {
+              const randomApt = ["apt-door-2", "apt-door-3", "apt-door-4", "apt-door-5", "apt-door-6"][Math.floor(Math.random() * 5)];
+              statsRef.current.apartmentKeys.push(randomApt);
+              showToast(`Found a key! Wonder which door it opens...`);
+              sound.play("coin");
+              saveGame();
+              return;
+            }
             return;
           case "fishing-rod": fishCast(); return;
           case "airport-desk": airportDesk(); return;
+          case "apartment-door": {
+            const aptId = it.id;
+            if (statsRef.current.apartmentKeys.includes(aptId)) {
+              showToast("You unlocked the door with your key!");
+            } else {
+              setDialog({
+                title: "Locked", emoji: "🔒",
+                body: "This door is locked. You need a key. Maybe you can find one somewhere...",
+                choices: [{ label: "Walk away", onSelect: () => setDialog(null) }],
+              });
+            }
+            return;
+          }
           case "tip-jar": tipJar(); return;
           case "mom-tv": momTV(); return;
           case "selfie-spot": selfieSpot(); return;
@@ -2033,8 +2062,27 @@ export default function MartinGame() {
           if (n.thoughtTimer <= 0) {
             n.thoughtTimer = 1500 + Math.random() * 3000;
             const range = Math.random() > 0.85 ? 250 : 90;
-            n.targetX = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
-            n.targetY = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
+            let tx = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
+            let ty = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
+            // Avoid buildings in outside scene
+            if (n.scene === "outside") {
+              let attempts = 0;
+              while (attempts < 5) {
+                let insideBuilding = false;
+                for (const b of SCENES.outside.buildings) {
+                  if (tx > b.x && tx < b.x + b.w && ty > b.y && ty < b.y + b.h) {
+                    insideBuilding = true;
+                    break;
+                  }
+                }
+                if (!insideBuilding) break;
+                tx = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
+                ty = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
+                attempts++;
+              }
+            }
+            n.targetX = tx;
+            n.targetY = ty;
             if (n.def.chatLines && Math.random() < 0.15) {
               n.speechBubble = randomChoice(n.def.chatLines); n.speechTimer = 2200;
             }
@@ -2092,6 +2140,25 @@ export default function MartinGame() {
           n.walkPhase += dt / 130;
           if (Math.abs(dx) > Math.abs(dy)) n.facingDir = dx > 0 ? "right" : "left";
           else n.facingDir = dy > 0 ? "down" : "up";
+          // NPC collision check - push back if inside wall/building
+          if (collides(n.x, n.y, n.scene)) {
+            n.x -= (dx / d2) * sp * 2;
+            n.y -= (dy / d2) * sp * 2;
+            n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
+            n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
+          }
+          // NPC building collision - avoid buildings in outside scene
+          if (n.scene === "outside") {
+            for (const b of SCENES.outside.buildings) {
+              if (n.x > b.x && n.x < b.x + b.w && n.y > b.y && n.y < b.y + b.h) {
+                n.x -= (dx / d2) * sp * 3;
+                n.y -= (dy / d2) * sp * 3;
+                n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
+                n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
+                break;
+              }
+            }
+          }
         } else if (n.activity === "chat" && n.partnerId) {
           // Face partner
           const p = npcs.find((x) => x.def.id === n.partnerId);

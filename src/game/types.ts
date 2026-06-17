@@ -20,7 +20,8 @@ export type SceneId =
   | "hidden-room"
   | "boutique"
   | "airport"
-  | "hell";
+  | "hell"
+  | "apartments";
 
 export interface Vec2 { x: number; y: number; }
 
@@ -41,7 +42,8 @@ export type InteractableType =
   | "moggayla-crack" | "transform-npc" | "street-food" | "decor-eat"
   | "exit-sign" | "fishing-rod" | "tip-jar" | "mom-tv"
   | "selfie-spot" | "secret-stash" | "secret-diary" | "quest-item"
-  | "airport-desk";
+  | "airport-desk"
+  | "apartment-door";
 
 export interface Interactable {
   id: string;
@@ -194,6 +196,7 @@ export interface GameStats {
   hasButtplug: boolean;
   hellDefeated: boolean;
   hasTicket: boolean;
+  apartmentKeys: string[];
 }
 
 export interface Quest { id: string; label: string; }

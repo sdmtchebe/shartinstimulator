@@ -239,7 +239,7 @@ export const NPC_DEFS: NpcDef[] = [
     ],
   },
   {
-    id: "damian", name: "Damian", homeScene: "outside", baseX: 1100, baseY: 760,
+    id: "damian", name: "Damian", homeScene: "apartments", baseX: 100, baseY: 250,
     color: "#f0c8a0", hairColor: "#5a3520", size: 18,
     description: "Martin's deaf and mute little chud brother. Plays soccer all day.",
     transformForm: "vegetable-wheelchair", transformLabel: "make Damian a wheelchair vegetable",
@@ -249,16 +249,16 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "neutral",
     specialAction: { label: "Steal his soccer ball (+$5, he cries)", emoji: "⚽" },
     schedule: [
-      { startHour: 8, endHour: 12, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
+      { startHour: 10, endHour: 12, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
       { startHour: 12, endHour: 15, scene: "gym", activity: "wander" },
       { startHour: 15, endHour: 17, scene: "tutorat", activity: "wander" },
       { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 8, scene: "outside", activity: "static" },
+      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
   {
-    id: "wolf-npc", name: "Wolf Shartos Bartos Bobitos", homeScene: "outside",
-    baseX: 1700, baseY: 950, color: "#3a5a3a", hairColor: "#1a2a1a", size: 24,
+    id: "wolf-npc", name: "Wolf Shartos Bartos Bobitos", homeScene: "apartments",
+    baseX: 100, baseY: 350, color: "#3a5a3a", hairColor: "#1a2a1a", size: 24,
     description: "Always dribbling an invisible soccer ball.",
     transformForm: "cartier-watch", transformLabel: "transform Wolf into a Cartier Santos",
     behavior: "wander",
@@ -271,11 +271,11 @@ export const NPC_DEFS: NpcDef[] = [
       { startHour: 14, endHour: 16, scene: "cartier", activity: "wander" },
       { startHour: 16, endHour: 18, scene: "gym", activity: "wander" },
       { startHour: 18, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 10, scene: "outside", activity: "static" },
+      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
   {
-    id: "konstantin", name: "Konstantin", homeScene: "outside", baseX: 600, baseY: 1200,
+    id: "konstantin", name: "Konstantin", homeScene: "apartments", baseX: 700, baseY: 450,
     color: "#c8b890", hairColor: "#2a1810", size: 22,
     description: "Smells like rakia. Always shouts about Bulgaria.",
     transformForm: "bulgarian-flag", transformLabel: "make Konstantin into a Bulgarian flag",
@@ -288,11 +288,11 @@ export const NPC_DEFS: NpcDef[] = [
       { startHour: 11, endHour: 14, scene: "nelly", activity: "wander" },
       { startHour: 14, endHour: 16, scene: "outside", activity: "wander" },
       { startHour: 16, endHour: 19, scene: "nelly", activity: "wander" },
-      { startHour: 19, endHour: 11, scene: "nelly", activity: "static" },
+      { startHour: 19, endHour: 11, scene: "apartments", activity: "static" },
     ],
   },
   {
-    id: "kai", name: "Kai", homeScene: "chudzone", baseX: 350, baseY: 350,
+    id: "kai", name: "Kai", homeScene: "apartments", baseX: 700, baseY: 350,
     color: "#d8c0a0", hairColor: "#3a2010", size: 22,
     description: "Once ate an entire candle on a dare.",
     transformForm: "bulgarian-flag", transformLabel: "make Kai into a Bulgarian flag",
@@ -306,11 +306,11 @@ export const NPC_DEFS: NpcDef[] = [
       { startHour: 13, endHour: 15, scene: "chudzone", activity: "wander" },
       { startHour: 15, endHour: 18, scene: "outside", activity: "wander" },
       { startHour: 18, endHour: 19, scene: "outside", activity: "eat" },
-      { startHour: 19, endHour: 10, scene: "outside", activity: "static" },
+      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
   {
-    id: "david", name: "David", homeScene: "outside", baseX: 2000, baseY: 1300,
+    id: "david", name: "David", homeScene: "apartments", baseX: 100, baseY: 450,
     color: "#e8c8a0", hairColor: "#2a1810", size: 22,
     description: "Carries hummus everywhere.",
     transformForm: "israeli-flag", transformLabel: "make David into an Israeli flag",
@@ -320,14 +320,14 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Accept hummus (-20 hunger, -3 chud)", emoji: "🥙" },
     schedule: [
-      { startHour: 9, endHour: 12, scene: "outside", activity: "wander" },
+      { startHour: 10, endHour: 12, scene: "outside", activity: "wander" },
       { startHour: 12, endHour: 14, scene: "gym", activity: "wander" },
       { startHour: 14, endHour: 19, scene: "outside", activity: "watchTV" },
-      { startHour: 19, endHour: 9, scene: "outside", activity: "static" },
+      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
   {
-    id: "anish", name: "Anish", homeScene: "chudzone", baseX: 600, baseY: 380,
+    id: "anish", name: "Anish", homeScene: "apartments", baseX: 750, baseY: 450,
     color: "#a06840", hairColor: "#1a0a05", size: 22,
     description: "Permanent cringe energy.",
     transformForm: "trash-can", transformLabel: "transform Anish into a trash can",
@@ -337,9 +337,9 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "smug",
     specialAction: { label: "Watch his stand-up (+15 chud, pure suffering)", emoji: "🎤" },
     schedule: [
-      { startHour: 8, endHour: 17, scene: "asbestos", activity: "wander" },
+      { startHour: 10, endHour: 17, scene: "asbestos", activity: "wander" },
       { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 8, scene: "asbestos", activity: "static" },
+      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -357,8 +357,8 @@ export const NPC_DEFS: NpcDef[] = [
     ],
   },
   {
-    id: "caillo", name: "Caillo Qui Casse les Couilles", homeScene: "outside",
-    baseX: 540, baseY: 400, color: "#f4d7b8", hairColor: "#5a3520", size: 20,
+    id: "caillo", name: "Caillo Qui Casse les Couilles", homeScene: "apartments",
+    baseX: 700, baseY: 250, color: "#f4d7b8", hairColor: "#5a3520", size: 20,
     description: "The most annoying student ever. Pays for tutorat.",
     transformForm: "rock", transformLabel: "turn Caillo into a literal rock",
     behavior: "wander",
@@ -367,10 +367,10 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "scared",
     specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
     schedule: [
-      { startHour: 7, endHour: 15, scene: "tutorat", activity: "wander" },
+      { startHour: 10, endHour: 15, scene: "tutorat", activity: "wander" },
       { startHour: 15, endHour: 17, scene: "outside", activity: "wander" },
       { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 7, scene: "outside", activity: "static" },
+      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -501,6 +501,8 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
       // Airport — top left corner
       { x: 50, y: 50, w: 300, h: 220, color: "#4a5a6a", label: "Martin Int'l Airport" },
+      // NPC Apartments — top middle
+      { x: 900, y: 50, w: 400, h: 220, color: "#6a4a3a", label: "NPC Apartments" },
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
@@ -517,6 +519,7 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
       { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
       { id: "d-airport", x: 200, y: 250, w: 60, h: 30, targetScene: "airport", targetPos: { x: 500, y: 580 }, label: "Airport", color: "#a0b0c0" },
+      { id: "d-apartments", x: 1070, y: 250, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "Apartments", color: "#8a6a4a" },
     ],
     interactables: [
       { id: "street-food-1", x: 800, y: 700, w: 60, h: 60, label: "Eat trash bag", type: "street-food", emoji: "🗑️" },
@@ -844,6 +847,47 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "hell-sign", x: 900, y: 100, w: 200, h: 60, label: "Sign: 'Abandon all hope, ye who enter here'", type: "easter-text", emoji: "🔥" },
       { id: "hell-pitchfork", x: 150, y: 800, w: 60, h: 80, label: "Abandoned pitchfork", type: "easter-object", emoji: "🔱" },
       { id: "hell-egg", x: 1700, y: 1000, w: 80, h: 50, label: "Graffiti: 'Wolf was here first'", type: "easter-text", emoji: "🎨" },
+    ],
+  },
+
+  apartments: {
+    id: "apartments", name: "NPC Apartments", width: 1000, height: 700,
+    bgColor: "#5a4a3a", bgPattern: "wood", spawnPos: { x: 500, y: 580 },
+    walls: [
+      { x: 0, y: 0, w: 1000, h: 30 },
+      { x: 0, y: 670, w: 1000, h: 30 },
+      { x: 0, y: 0, w: 30, h: 700 },
+      { x: 970, y: 0, w: 30, h: 700 },
+      // Apartment walls (divide into 6 apartments)
+      // Left side: 3 apartments
+      { x: 250, y: 30, w: 10, h: 270, color: "#4a3a2a", label: "Apt 1-2 wall" },
+      { x: 250, y: 400, w: 10, h: 270, color: "#4a3a2a", label: "Apt 2-3 wall" },
+      { x: 30, y: 300, w: 230, h: 10, color: "#4a3a2a", label: "Apt divider" },
+      { x: 30, y: 400, w: 230, h: 10, color: "#4a3a2a", label: "Apt divider" },
+      // Right side: 3 apartments
+      { x: 750, y: 30, w: 10, h: 270, color: "#4a3a2a", label: "Apt 4-5 wall" },
+      { x: 750, y: 400, w: 10, h: 270, color: "#4a3a2a", label: "Apt 5-6 wall" },
+      { x: 520, y: 300, w: 230, h: 10, color: "#4a3a2a", label: "Apt divider" },
+      { x: 520, y: 400, w: 230, h: 10, color: "#4a3a2a", label: "Apt divider" },
+    ],
+    doors: [
+      { id: "exit", x: 460, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 1100, y: 90 }, label: "Outside", color: COLORS.doorway },
+    ],
+    interactables: [
+      // Lobby stuff
+      { id: "apt-mailboxes", x: 450, y: 100, w: 100, h: 40, label: "Mailboxes: full of unpaid bills", type: "easter-text", emoji: "📬" },
+      { id: "apt-couch", x: 400, y: 520, w: 120, h: 50, label: "Comfy lobby couch", type: "easter-text", emoji: "🛋️" },
+      { id: "apt-plant", x: 100, y: 550, w: 50, h: 50, label: "Dead plant", type: "easter-text", emoji: "🪴" },
+      // Apartment doors as interactables
+      { id: "apt-door-1", x: 100, y: 250, w: 80, h: 40, label: "Apartment 1 - Damian", type: "apartment-door", emoji: "🚪" },
+      { id: "apt-door-2", x: 100, y: 350, w: 80, h: 40, label: "Apartment 2 - Wolf", type: "apartment-door", emoji: "🚪" },
+      { id: "apt-door-3", x: 100, y: 450, w: 80, h: 40, label: "Apartment 3 - David", type: "apartment-door", emoji: "🚪" },
+      { id: "apt-door-4", x: 700, y: 250, w: 80, h: 40, label: "Apartment 4 - Caillo", type: "apartment-door", emoji: "🚪" },
+      { id: "apt-door-5", x: 700, y: 350, w: 80, h: 40, label: "Apartment 5 - Kai", type: "apartment-door", emoji: "🚪" },
+      { id: "apt-door-6", x: 700, y: 450, w: 80, h: 40, label: "Apartment 6 - Konstantin & Anish", type: "apartment-door", emoji: "🚪" },
+      // Key spawns (small chance items on the floor)
+      { id: "apt-key-1", x: 350, y: 200, w: 30, h: 20, label: "A key on the floor", type: "quest-item", emoji: "🔑" },
+      { id: "apt-key-2", x: 600, y: 500, w: 30, h: 20, label: "A key under the couch", type: "quest-item", emoji: "🔑" },
     ],
   },
 };
