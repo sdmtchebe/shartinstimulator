@@ -501,8 +501,8 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
       // Airport — top left corner
       { x: 50, y: 50, w: 300, h: 220, color: "#4a5a6a", label: "Martin Int'l Airport" },
-      // NPC Apartments — top middle
-      { x: 900, y: 50, w: 400, h: 220, color: "#6a4a3a", label: "NPC Apartments" },
+      // NPC Apartments — between airport and tutorat
+      { x: 580, y: 50, w: 300, h: 220, color: "#6a4a3a", label: "NPC Apartments" },
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
@@ -519,10 +519,11 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
       { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
       { id: "d-airport", x: 200, y: 250, w: 60, h: 30, targetScene: "airport", targetPos: { x: 500, y: 580 }, label: "Airport", color: "#a0b0c0" },
-      { id: "d-apartments", x: 1070, y: 250, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "Apartments", color: "#8a6a4a" },
+      { id: "d-apartments", x: 700, y: 250, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "Apartments", color: "#8a6a4a" },
     ],
     buildings: [
       { x: 250, y: 280, w: 360, h: 220, label: "Martin's House" },
+      { x: 580, y: 50, w: 300, h: 220, label: "NPC Apartments" },
       { x: 900, y: 250, w: 320, h: 240, label: "Tutorat Center" },
       { x: 1380, y: 260, w: 360, h: 280, label: "Basketball Court" },
       { x: 1900, y: 260, w: 340, h: 280, label: "Fight Club" },
@@ -538,7 +539,6 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 1520, y: 1700, w: 260, h: 200, label: "Sus Salon" },
       { x: 1920, y: 1700, w: 260, h: 200, label: "MoggMcCrackeggayla Boutique" },
       { x: 50, y: 50, w: 300, h: 220, label: "Martin Int'l Airport" },
-      { x: 900, y: 50, w: 400, h: 220, label: "NPC Apartments" },
     ],
     interactables: [
       { id: "street-food-1", x: 800, y: 700, w: 60, h: 60, label: "Eat trash bag", type: "street-food", emoji: "🗑️" },
@@ -890,7 +890,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 520, y: 400, w: 230, h: 10, color: "#4a3a2a", label: "Apt divider" },
     ],
     doors: [
-      { id: "exit", x: 460, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 1100, y: 90 }, label: "Outside", color: COLORS.doorway },
+      { id: "exit", x: 460, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 730, y: 290 }, label: "Outside", color: COLORS.doorway },
     ],
     interactables: [
       // Lobby stuff

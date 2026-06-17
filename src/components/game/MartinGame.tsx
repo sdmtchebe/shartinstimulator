@@ -2147,18 +2147,6 @@ export default function MartinGame() {
             n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
             n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
           }
-          // NPC building collision - avoid buildings in outside scene
-          if (n.scene === "outside") {
-            for (const b of SCENES.outside.buildings) {
-              if (n.x > b.x && n.x < b.x + b.w && n.y > b.y && n.y < b.y + b.h) {
-                n.x -= (dx / d2) * sp * 3;
-                n.y -= (dy / d2) * sp * 3;
-                n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
-                n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
-                break;
-              }
-            }
-          }
         } else if (n.activity === "chat" && n.partnerId) {
           // Face partner
           const p = npcs.find((x) => x.def.id === n.partnerId);
