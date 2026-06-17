@@ -68,6 +68,7 @@ export interface SceneDef {
   doors: Door[];
   interactables: Interactable[];
   spawnPos: Vec2;
+  buildings?: { x: number; y: number; w: number; h: number; color?: string; label?: string }[];
 }
 
 export type NpcMood = "happy" | "neutral" | "angry" | "shocked" | "scared" | "horny" | "smug" | "sad";
