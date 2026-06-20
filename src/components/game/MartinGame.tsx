@@ -1987,7 +1987,7 @@ export default function MartinGame() {
           n.targetX = clamp(n.targetX, 60, SCENES.outside.width - 60);
           n.targetY = clamp(n.targetY, 60, SCENES.outside.height - 60);
           if (n.def.behavior === "soccer") {
-            n.ballX = n.x + 30; n.ballY = n.y + 30;
+            n.ballX = n.x; n.ballY = n.y;
             n.ballVX = 0; n.ballVY = 0;
           }
           continue;
@@ -2207,7 +2207,7 @@ export default function MartinGame() {
               n.targetY = pt.y + randomInt(-40, 40);
             }
             if (n.def.behavior === "soccer" && n.ballX !== undefined && n.ballY !== undefined) {
-              n.ballX = n.x + 30; n.ballY = n.y + 30;
+              n.ballX = n.x; n.ballY = n.y;
               n.ballVX = 0; n.ballVY = 0;
             }
           }
