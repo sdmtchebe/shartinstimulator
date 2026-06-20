@@ -1973,8 +1973,8 @@ export default function MartinGame() {
             n.targetY = n.buildingExitY + randomInt(-80, 80);
             n.targetX = clamp(n.targetX, 60, SCENES.outside.width - 60);
             n.targetY = clamp(n.targetY, 60, SCENES.outside.height - 60);
+            continue;
           }
-          continue;
         }
         if (n.scene === "outside" && Math.random() < 0.0003 * dt) {
           const doors = SCENES.outside.doors;
@@ -1987,10 +1987,16 @@ export default function MartinGame() {
               n.buildingExitY = d.y + d.h / 2 + 40;
               n.scene = d.targetScene as SceneId;
               const spawn = SCENES[d.targetScene]?.spawnPos ?? { x: 400, y: 580 };
-              n.x = spawn.x + randomInt(-40, 40);
-              n.y = spawn.y + randomInt(-40, 40);
-              n.targetX = n.x;
-              n.targetY = n.y;
+              n.x = spawn.x; n.y = spawn.y;
+              const interests = SCENE_INTERESTS[d.targetScene] ?? [];
+              if (interests.length > 0) {
+                const pt = interests[Math.floor(Math.random() * interests.length)];
+                n.targetX = clamp(pt.x + randomInt(-15, 15), 60, (SCENES[d.targetScene]?.width ?? 800) - 60);
+                n.targetY = clamp(pt.y + randomInt(-15, 15), 60, (SCENES[d.targetScene]?.height ?? 600) - 60);
+              } else {
+                n.targetX = clamp(spawn.x + randomInt(-120, 120), 60, (SCENES[d.targetScene]?.width ?? 800) - 60);
+                n.targetY = clamp(spawn.y + randomInt(-120, 120), 60, (SCENES[d.targetScene]?.height ?? 600) - 60);
+              }
               break;
             }
           }
