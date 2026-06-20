@@ -1969,19 +1969,27 @@ export default function MartinGame() {
           n.targetX = 500; n.targetY = 580;
           continue;
         }
-        // Wake up at 10 AM — teleport outside
+        // Wake up at 10 AM — teleport outside to open area
         if (n.scene === "apartments" && currentHour >= 10 && currentHour < 18.5) {
           n.goingHome = false;
           n.scene = "outside";
-          const aDoor = SCENES.outside.doors.find(d => d.targetScene === "apartments");
-          const spawnX = aDoor ? aDoor.x + aDoor.w / 2 : 1260;
-          const spawnY = aDoor ? aDoor.y + aDoor.h / 2 + 50 : 1935;
-          n.x = spawnX + randomInt(-30, 30);
-          n.y = spawnY + randomInt(-10, 30);
-          n.targetX = n.x + randomInt(-80, 80);
-          n.targetY = n.y + randomInt(-40, 80);
+          const roadPts = SCENE_INTERESTS.outside ?? [];
+          if (roadPts.length > 0) {
+            const pt = roadPts[Math.floor(Math.random() * roadPts.length)];
+            n.x = pt.x + randomInt(-15, 15);
+            n.y = pt.y + randomInt(-15, 15);
+            n.targetX = pt.x + randomInt(-60, 60);
+            n.targetY = pt.y + randomInt(-60, 60);
+          } else {
+            n.x = 1400; n.y = 660;
+            n.targetX = 1400; n.targetY = 660;
+          }
           n.targetX = clamp(n.targetX, 60, SCENES.outside.width - 60);
           n.targetY = clamp(n.targetY, 60, SCENES.outside.height - 60);
+          if (n.def.behavior === "soccer") {
+            n.ballX = n.x + 30; n.ballY = n.y + 30;
+            n.ballVX = 0; n.ballVY = 0;
+          }
           continue;
         }
 
