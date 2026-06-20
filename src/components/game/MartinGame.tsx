@@ -149,6 +149,7 @@ export default function MartinGame() {
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
   const carRef = useRef<CarState>({ x: 300, y: 220, angle: Math.PI, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0 });
+  const garageDoorOpen = useRef(false);
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
   const flightAnimRef = useRef<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null); flightAnimRef.current = flightAnim;
@@ -1337,9 +1338,9 @@ export default function MartinGame() {
     );
     if (nearbyNpc) { interactWithNpc(nearbyNpc); return; }
 
-    // Car interaction
+    // Car interaction (works in outside and garage)
     const car = carRef.current;
-    if (m.scene === "outside" && !car.inCar && dist(m.x, m.y, car.x, car.y) < 60) {
+    if ((m.scene === "outside" || m.scene === "garage") && !car.inCar && dist(m.x, m.y, car.x, car.y) < 60) {
       car.inCar = true;
       car.gear = 0;
       showToast("🚗 Press W to start, 1-4 gears, R reverse, H headlights, E exit");
@@ -1351,11 +1352,21 @@ export default function MartinGame() {
       car.speed = 0;
       car.gear = 0;
       car.steerAngle = 0;
-      // Place player next to car
       m.x = car.x + Math.cos(car.angle + Math.PI / 2) * 40;
       m.y = car.y + Math.sin(car.angle + Math.PI / 2) * 40;
       showToast("Exited car");
       return;
+    }
+
+    // Garage door open/close
+    if (m.scene === "outside") {
+      const garDoor = SCENES.outside.doors.find(d => d.id === "d-garage");
+      if (garDoor && m.x > garDoor.x - 40 && m.x < garDoor.x + garDoor.w + 40 && m.y > garDoor.y - 40 && m.y < garDoor.y + garDoor.h + 40) {
+        garageDoorOpen.current = !garageDoorOpen.current;
+        sound.play("door");
+        showToast(garageDoorOpen.current ? "🚪 Garage door OPENED" : "🚪 Garage door CLOSED");
+        return;
+      }
     }
 
     // Gas station interaction
@@ -1440,6 +1451,14 @@ export default function MartinGame() {
         }
         // Garage: bring car along if in car
         if (d.targetScene === "garage") {
+          if (!garageDoorOpen.current) {
+            setDialog({
+              title: "Garage Door", emoji: "🚪",
+              body: "The garage door is closed. Press E near the door to open it.",
+              choices: [{ label: "Walk away", onSelect: () => setDialog(null) }],
+            });
+            return;
+          }
           const car = carRef.current;
           if (car.inCar) {
             car.inCar = false;
@@ -1934,6 +1953,11 @@ export default function MartinGame() {
           if (car.x > d.x - 20 && car.x < d.x + d.w + 20 && car.y > d.y - 20 && car.y < d.y + d.h + 20) {
             if (d.targetScene === "apartments") continue; // can't drive into apartments
             if (d.targetScene === "garage" && m.scene === "outside") {
+              if (!garageDoorOpen.current) {
+                showToast("🚫 Garage door is CLOSED! Press E near the door to open it.");
+                car.speed *= -0.5;
+                return;
+              }
               car.inCar = false;
               moveToScene("garage", d.targetPos.x, d.targetPos.y);
               car.x = 300; car.y = 220; car.angle = Math.PI;
@@ -2526,7 +2550,7 @@ export default function MartinGame() {
         }
       }
 
-      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current, hellWelcomeRef.current, carRef.current);
+      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current, hellWelcomeRef.current, carRef.current, garageDoorOpen.current);
       eatTimerRef.current = Math.max(0, eatTimerRef.current - dt);
       if (ballAnimRef.current) {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
@@ -2742,6 +2766,7 @@ function render(
   greaseProjectiles: { x: number; y: number; vx: number; vy: number; active: boolean }[],
   hellWelcomeTimer: number,
   car: CarState,
+  garageDoorOpen: boolean,
 ) {
   const w = canvas.clientWidth; const h = canvas.clientHeight;
   const shakeX = (Math.random() - 0.5) * stats.shake;
@@ -2772,10 +2797,20 @@ function render(
   }
 
   for (const d of scene.doors) {
-    ctx.fillStyle = d.color ?? "#f4b860"; ctx.fillRect(d.x, d.y, d.w, d.h);
-    ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 2; ctx.strokeRect(d.x, d.y, d.w, d.h);
-    ctx.fillStyle = "#fff"; ctx.font = "9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
-    ctx.fillText(d.label, d.x + d.w / 2, d.y - 6);
+    if (d.id === "d-garage" && !garageDoorOpen) {
+      // Closed garage door — draw as wall
+      ctx.fillStyle = "#6a5a40"; ctx.fillRect(d.x, d.y, d.w, d.h);
+      ctx.strokeStyle = "#3a2a10"; ctx.lineWidth = 2; ctx.strokeRect(d.x, d.y, d.w, d.h);
+      ctx.fillStyle = "#fff"; ctx.font = "7px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+      ctx.fillText("CLOSED", d.x + d.w / 2, d.y + d.h / 2 + 3);
+      ctx.fillStyle = "#fff"; ctx.font = "9px 'Press Start 2P', monospace";
+      ctx.fillText("Garage [E] to open", d.x + d.w / 2, d.y - 6);
+    } else {
+      ctx.fillStyle = d.color ?? "#f4b860"; ctx.fillRect(d.x, d.y, d.w, d.h);
+      ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 2; ctx.strokeRect(d.x, d.y, d.w, d.h);
+      ctx.fillStyle = "#fff"; ctx.font = "9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+      ctx.fillText(d.label, d.x + d.w / 2, d.y - 6);
+    }
   }
 
   for (const it of scene.interactables) {
