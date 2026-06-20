@@ -149,6 +149,7 @@ export interface NpcRuntime {
   buildingTimer: number;
   buildingExitX: number;
   buildingExitY: number;
+  goingHome: boolean;
 }
 
 export interface FoodItem {

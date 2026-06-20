@@ -233,8 +233,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Challenge to HORSE ($10 bet)", emoji: "🏀" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
     ],
   },
   {
@@ -248,8 +247,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "neutral",
     specialAction: { label: "Steal his soccer ball (+$5, he cries)", emoji: "⚽" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
     ],
   },
   {
@@ -263,8 +261,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "smug",
     specialAction: { label: "Ask to see the watch (wastes 15 min)", emoji: "⌚" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1650, targetY: 1300 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "wander", targetX: 1650, targetY: 1300 },
     ],
   },
   {
@@ -278,8 +275,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "angry",
     specialAction: { label: "Drink rakia with him (-15 hunger, +8 chud)", emoji: "🍻" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1250, targetY: 1300 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "wander", targetX: 1250, targetY: 1300 },
     ],
   },
   {
@@ -293,8 +289,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "shocked",
     specialAction: { label: "Dare him to eat something horrible (+10 chud each)", emoji: "🕯️" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 2200, targetY: 900 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "wander", targetX: 2200, targetY: 900 },
     ],
   },
   {
@@ -308,8 +303,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Accept hummus (-20 hunger, -3 chud)", emoji: "🥙" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 800, targetY: 750 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "wander", targetX: 800, targetY: 750 },
     ],
   },
   {
@@ -323,8 +317,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "smug",
     specialAction: { label: "Watch his stand-up (+15 chud, pure suffering)", emoji: "🎤" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 2050, targetY: 1300 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "wander", targetX: 2050, targetY: 1300 },
     ],
   },
   {
@@ -352,8 +345,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "scared",
     specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "tutorat", activity: "wander", targetX: 420, targetY: 300 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "tutorat", activity: "wander", targetX: 420, targetY: 300 },
     ],
   },
   {
@@ -410,8 +402,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
-      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 10, endHour: 18.5, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
     ],
   },
   {
@@ -554,13 +545,11 @@ export const SCENES: Record<string, SceneDef> = {
       // NEW bottom row
       { x: 320, y: 1700, w: 260, h: 200, color: "#8a3060", label: "McMoggayla Strip Club" },
       { x: 720, y: 1700, w: 260, h: 200, color: "#3a5a78", label: "Fishing Dock" },
-      { x: 1120, y: 1700, w: 260, h: 200, color: "#5a4030", label: "Cousin's Crack Den" },
+      { x: 1120, y: 1700, w: 260, h: 200, color: "#6a4a3a", label: "NPC Apartments" },
       { x: 1520, y: 1700, w: 260, h: 200, color: "#403060", label: "Sus Salon" },
       { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
       // Airport — top left corner
       { x: 50, y: 50, w: 300, h: 220, color: "#4a5a6a", label: "Martin Int'l Airport" },
-      // NPC Apartments — top right corner
-      { x: 2400, y: 50, w: 300, h: 220, color: "#6a4a3a", label: "NPC Apartments" },
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
@@ -575,13 +564,12 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-asb", x: 2030, y: 1280, w: 60, h: 30, targetScene: "asbestos", targetPos: { x: 400, y: 580 }, label: "Asbestos", color: COLORS.doorway },
       { id: "d-strip", x: 430, y: 1880, w: 60, h: 30, targetScene: "stripclub", targetPos: { x: 400, y: 580 }, label: "Strip Club", color: "#ff80c0" },
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
+      { id: "d-apartments", x: 1230, y: 1880, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "NPC Apts", color: "#8a6a4a" },
       { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
       { id: "d-airport", x: 200, y: 250, w: 60, h: 30, targetScene: "airport", targetPos: { x: 500, y: 580 }, label: "Airport", color: "#a0b0c0" },
-      { id: "d-apartments", x: 2520, y: 250, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "NPC Apts (Private)", color: "#8a6a4a" },
     ],
     buildings: [
       { x: 250, y: 280, w: 360, h: 220, label: "Martin's House" },
-      { x: 2400, y: 50, w: 300, h: 220, label: "NPC Apartments" },
       { x: 900, y: 250, w: 320, h: 240, label: "Tutorat Center" },
       { x: 1380, y: 260, w: 360, h: 280, label: "Basketball Court" },
       { x: 1900, y: 260, w: 340, h: 280, label: "Fight Club" },
@@ -593,7 +581,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 1920, y: 1100, w: 260, h: 200, label: "Asbestos Poubelle" },
       { x: 320, y: 1700, w: 260, h: 200, label: "McMoggayla Strip Club" },
       { x: 720, y: 1700, w: 260, h: 200, label: "Fishing Dock" },
-      { x: 1120, y: 1700, w: 260, h: 200, label: "Cousin's Crack Den" },
+      { x: 1120, y: 1700, w: 260, h: 200, label: "NPC Apartments" },
       { x: 1520, y: 1700, w: 260, h: 200, label: "Sus Salon" },
       { x: 1920, y: 1700, w: 260, h: 200, label: "MoggMcCrackeggayla Boutique" },
       { x: 50, y: 50, w: 300, h: 220, label: "Martin Int'l Airport" },
