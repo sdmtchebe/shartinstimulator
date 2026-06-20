@@ -54,7 +54,7 @@ function makeNpcs(): NpcRuntime[] {
     ballVX: 0, ballVY: 0,
     anger: 0, hp: 50,
     asleep: false, stalking: false, pickpocketCd: 0,
-    goingHome: false,
+    goingHome: false, stuckTimer: 0,
   }));
 }
 
@@ -2166,6 +2166,7 @@ export default function MartinGame() {
         const dy = n.targetY - n.y;
         const d2 = Math.hypot(dx, dy);
         if (d2 > 2) {
+          n.stuckTimer = 0;
           const sp = n.speed * (dt / 16);
           n.x += (dx / d2) * sp; n.y += (dy / d2) * sp;
           n.walkPhase += dt / 130;
@@ -2183,6 +2184,23 @@ export default function MartinGame() {
             } else {
               n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
               n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
+            }
+          }
+        } else {
+          // Stuck detector — if NPC hasn't moved for 2s, teleport to road
+          n.stuckTimer += dt;
+          if (n.stuckTimer > 2000) {
+            n.stuckTimer = 0;
+            const fallback = SCENE_INTERESTS[n.scene] ?? [];
+            if (fallback.length > 0) {
+              const pt = fallback[Math.floor(Math.random() * fallback.length)];
+              n.x = pt.x; n.y = pt.y;
+              n.targetX = pt.x + randomInt(-40, 40);
+              n.targetY = pt.y + randomInt(-40, 40);
+            }
+            if (n.def.behavior === "soccer" && n.ballX !== undefined && n.ballY !== undefined) {
+              n.ballX = n.x + 30; n.ballY = n.y + 30;
+              n.ballVX = 0; n.ballVY = 0;
             }
           }
         }

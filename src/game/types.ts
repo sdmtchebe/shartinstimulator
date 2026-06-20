@@ -146,6 +146,7 @@ export interface NpcRuntime {
   stalking?: boolean;
   pickpocketCd?: number;
   goingHome: boolean;
+  stuckTimer: number;
 }
 
 export interface FoodItem {
