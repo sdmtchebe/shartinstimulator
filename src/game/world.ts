@@ -343,7 +343,7 @@ export const NPC_DEFS: NpcDef[] = [
     chatLines: ["but why does 2+2 = 4?", "wait what's a number", "explain it like im 4", "this is too hard"],
     reactionEmojis: ["🤔", "🧱", "📚"],
     defaultMood: "scared",
-    specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
+    specialAction: { label: "Give extra homework (+$500, he weeps)", emoji: "📚" },
     schedule: [
       { startHour: 10, endHour: 18.5, scene: "tutorat", activity: "wander", targetX: 420, targetY: 300 },
     ],

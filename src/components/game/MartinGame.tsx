@@ -1207,8 +1207,8 @@ export default function MartinGame() {
               break;
             }
             case "caillo": {
-              addMoney(10); setEmotion("scared"); sound.play("coin");
-              showToast("Extra homework assigned. Caillo cries. +$10.");
+              addMoney(500); setEmotion("scared"); sound.play("coin");
+              showToast("Extra homework assigned. Caillo cries. +$500.");
               break;
             }
             case "mcmoggayla": {
@@ -1961,13 +1961,25 @@ export default function MartinGame() {
           continue;
         }
 
-        // End of day — teleport to apartments at 6:30 PM
-        if (n.scene === "outside" && currentHour >= 18.5 && !n.goingHome) {
+        // End of day — walk to apartments at 6:30 PM, then disappear
+        const aptDoor = SCENES.outside.doors.find(d => d.targetScene === "apartments");
+        const aptDoorX = aptDoor ? aptDoor.x + aptDoor.w / 2 : 1260;
+        const aptDoorY = aptDoor ? aptDoor.y + aptDoor.h / 2 : 1895;
+        if (!n.goingHome && n.scene === "outside" && currentHour >= 18.5) {
           n.goingHome = true;
-          n.scene = "apartments";
-          n.x = 500; n.y = 580;
-          n.targetX = 500; n.targetY = 580;
-          continue;
+          n.targetX = aptDoorX;
+          n.targetY = aptDoorY;
+        }
+        if (n.goingHome && n.scene === "outside") {
+          if (dist(n.x, n.y, aptDoorX, aptDoorY) < 35) {
+            n.goingHome = false;
+            n.scene = "apartments";
+            n.x = 500; n.y = 580;
+            n.targetX = 500; n.targetY = 580;
+            continue;
+          }
+          n.targetX = aptDoorX;
+          n.targetY = aptDoorY;
         }
         // Wake up at 10 AM — teleport outside to open area
         if (n.scene === "apartments" && currentHour >= 10 && currentHour < 18.5) {
