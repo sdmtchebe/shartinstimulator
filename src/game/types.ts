@@ -22,7 +22,8 @@ export type SceneId =
   | "airport"
   | "hell"
   | "apartments"
-  | "gas-station";
+  | "gas-station"
+  | "garage";
 
 export interface Vec2 { x: number; y: number; }
 

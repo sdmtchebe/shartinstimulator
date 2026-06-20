@@ -541,6 +541,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 2780, y: 0, w: 20, h: 2000 },
       // Top row
       { x: 250, y: 280, w: 360, h: 220, color: COLORS.building, label: "Martin's House" },
+      { x: 510, y: 340, w: 120, h: 160, color: "#7a6a50", label: "Garage" },
       { x: 900, y: 250, w: 320, h: 240, color: "#5a7a8a", label: "Tutorat Center" },
       { x: 1380, y: 260, w: 360, h: 280, color: "#a87850", label: "Basketball Court" },
       { x: 1900, y: 260, w: 340, h: 280, color: "#3a2030", label: "Fight Club" },
@@ -562,6 +563,7 @@ export const SCENES: Record<string, SceneDef> = {
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
+      { id: "d-garage", x: 530, y: 470, w: 70, h: 30, targetScene: "garage", targetPos: { x: 400, y: 500 }, label: "Garage", color: "#8a7a5a" },
       { id: "d-tutorat", x: 1040, y: 460, w: 60, h: 30, targetScene: "tutorat", targetPos: { x: 400, y: 580 }, label: "Tutorat", color: COLORS.doorway },
       { id: "d-court", x: 1540, y: 510, w: 60, h: 30, targetScene: "court", targetPos: { x: 400, y: 600 }, label: "Court", color: COLORS.doorway },
       { id: "d-fight", x: 2050, y: 510, w: 60, h: 30, targetScene: "fightclub", targetPos: { x: 400, y: 580 }, label: "Fight Club", color: COLORS.doorway },
@@ -963,6 +965,27 @@ export const SCENES: Record<string, SceneDef> = {
       // Key spawns (small chance items on the floor)
       { id: "apt-key-1", x: 350, y: 200, w: 30, h: 20, label: "A key on the floor", type: "quest-item", emoji: "🔑" },
       { id: "apt-key-2", x: 600, y: 500, w: 30, h: 20, label: "A key under the couch", type: "quest-item", emoji: "🔑" },
+    ],
+  },
+
+  "garage": {
+    id: "garage", name: "Martin's Garage", width: 600, height: 400,
+    bgColor: "#3a3028", bgPattern: "concrete", spawnPos: { x: 400, y: 500 },
+    walls: [
+      { x: 0, y: 0, w: 600, h: 20 },
+      { x: 0, y: 380, w: 600, h: 20 },
+      { x: 0, y: 0, w: 20, h: 400 },
+      { x: 580, y: 0, w: 20, h: 400 },
+    ],
+    doors: [
+      { id: "exit", x: 370, y: 370, w: 80, h: 30, targetScene: "outside", targetPos: { x: 560, y: 530 }, label: "Outside", color: COLORS.doorway },
+    ],
+    interactables: [
+      { id: "garage-tools", x: 80, y: 60, w: 100, h: 80, label: "Old Zastava toolbox (rusty wrenches)", type: "easter-text", emoji: "🔧" },
+      { id: "garage-oil", x: 450, y: 60, w: 60, h: 60, label: "Oil cans (expired 1997)", type: "decor-eat", emoji: "🛢️" },
+      { id: "garage-tires", x: 80, y: 250, w: 80, h: 80, label: "Spare tires (also Zastava)", type: "easter-text", emoji: "🛞" },
+      { id: "garage-poster", x: 450, y: 250, w: 80, h: 80, label: "Poster: 'YUGO — The Future is NOW' (it wasn't)", type: "easter-text", emoji: "🖼️" },
+      { id: "garage-shelf", x: 250, y: 40, w: 100, h: 50, label: "Shelf with mystery fluids", type: "easter-text", emoji: "🧪" },
     ],
   },
 

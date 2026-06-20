@@ -148,7 +148,7 @@ export default function MartinGame() {
   const greaseCdRef = useRef(0);
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
-  const carRef = useRef<CarState>({ x: 320, y: 560, angle: Math.PI / 2, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0 });
+  const carRef = useRef<CarState>({ x: 300, y: 220, angle: Math.PI, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0 });
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
   const flightAnimRef = useRef<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null); flightAnimRef.current = flightAnim;
@@ -1438,6 +1438,28 @@ export default function MartinGame() {
           });
           return;
         }
+        // Garage: bring car along if in car
+        if (d.targetScene === "garage") {
+          const car = carRef.current;
+          if (car.inCar) {
+            car.inCar = false;
+            moveToScene("garage", d.targetPos.x, d.targetPos.y);
+            car.x = 300; car.y = 220; car.angle = Math.PI;
+            car.speed = 0; car.gear = 0; car.engineRunning = false;
+            showToast("🚗 Parked in garage");
+          } else {
+            moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y);
+          }
+          return;
+        }
+        // Garage exit: place car outside
+        if (m.scene === "garage" && d.targetScene === "outside") {
+          const car = carRef.current;
+          car.x = 560; car.y = 530; car.angle = Math.PI / 2;
+          car.speed = 0; car.gear = 0; car.engineRunning = false;
+          moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y);
+          return;
+        }
         moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y); return;
       }
     }
@@ -1803,7 +1825,7 @@ export default function MartinGame() {
       // Car physics
       const car = carRef.current;
       const k = keysRef.current;
-      if (car.inCar && m.scene === "outside" && !dialogActive && !fightRef.current) {
+      if (car.inCar && (m.scene === "outside" || m.scene === "garage") && !dialogActive && !fightRef.current) {
         // Gear shifting (only on key edge - prevent spam)
         if (k.gear1 && car.gear !== 1) { car.gear = 1; showToast("⚙️ Gear 1"); }
         if (k.gear2 && car.gear !== 2) { car.gear = 2; showToast("⚙️ Gear 2"); }
@@ -1904,8 +1926,32 @@ export default function MartinGame() {
           }
         }
 
-        car.x = clamp(car.x, 40, SCENES.outside.width - 40);
-        car.y = clamp(car.y, 40, SCENES.outside.height - 40);
+        car.x = clamp(car.x, 40, SCENES[m.scene].width - 40);
+        car.y = clamp(car.y, 40, SCENES[m.scene].height - 40);
+
+        // Car door detection — drive through doors
+        for (const d of scene.doors) {
+          if (car.x > d.x - 20 && car.x < d.x + d.w + 20 && car.y > d.y - 20 && car.y < d.y + d.h + 20) {
+            if (d.targetScene === "apartments") continue; // can't drive into apartments
+            if (d.targetScene === "garage" && m.scene === "outside") {
+              car.inCar = false;
+              moveToScene("garage", d.targetPos.x, d.targetPos.y);
+              car.x = 300; car.y = 220; car.angle = Math.PI;
+              car.speed = 0; car.gear = 0; car.engineRunning = false;
+              showToast("🚗 Parked in garage");
+              return;
+            }
+            if (d.targetScene === "outside" && m.scene === "garage") {
+              car.x = 560; car.y = 530; car.angle = Math.PI / 2;
+              car.speed = 0; car.gear = 0; car.engineRunning = false;
+              moveToScene("outside", 560, 530);
+              showToast("🚗 Drove out of garage");
+              return;
+            }
+            moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y);
+            return;
+          }
+        }
 
         // Gas
         if (car.engineRunning && Math.abs(car.speed) > 0.1) {
@@ -2785,8 +2831,8 @@ function render(
     }
   }
 
-  // Draw car on outside
-  if (scene.id === "outside") {
+  // Draw car on outside or garage
+  if (scene.id === "outside" || scene.id === "garage") {
     drawCar(ctx, car);
   }
 
