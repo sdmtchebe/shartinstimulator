@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { SCENES, NPC_DEFS, MOLDY_FOODS, STREET_FOODS, FIGHTERS, CHUD_ACTIVITIES, ALL_QUESTS, DAY_LENGTH_SECONDS, DAY_START_HOUR, DAY_END_HOUR, PLAYER_SPEED, PLAYER_RADIUS, CALL_SCRIPTS, DAILY_EVENTS } from "@/game/world";
+import { SCENES, NPC_DEFS, MOLDY_FOODS, STREET_FOODS, FIGHTERS, CHUD_ACTIVITIES, ALL_QUESTS, DAY_LENGTH_SECONDS, DAY_START_HOUR, DAY_END_HOUR, PLAYER_SPEED, PLAYER_RADIUS, CALL_SCRIPTS, DAILY_EVENTS, SCENE_INTERESTS } from "@/game/world";
 import type { Direction, GameStats, Interactable, MartinState, NpcDef, NpcRuntime, SceneId } from "@/game/types";
 import { clamp, dist, randomChoice, randomInt } from "@/lib/utils";
 import { sound } from "@/game/sound";
