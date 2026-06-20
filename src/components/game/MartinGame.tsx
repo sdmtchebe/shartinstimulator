@@ -2005,17 +2005,24 @@ export default function MartinGame() {
           if (n.ballY < 50) { n.ballY = 50; n.ballVY = Math.abs(n.ballVY); }
           if (n.ballY > sceneH - 50) { n.ballY = sceneH - 50; n.ballVY = -Math.abs(n.ballVY); }
           // Ball bounces off buildings/walls
+          const ballR = 10;
           for (const w of SCENES[n.scene].walls) {
             if (w.w <= 30 && w.h <= 30) continue;
-            if (n.ballX > w.x && n.ballX < w.x + w.w && n.ballY > w.y && n.ballY < w.y + w.h) {
+            const closestX = clamp(n.ballX, w.x, w.x + w.w);
+            const closestY = clamp(n.ballY, w.y, w.y + w.h);
+            const bdx = n.ballX - closestX;
+            const bdy = n.ballY - closestY;
+            if (bdx * bdx + bdy * bdy < ballR * ballR) {
               const cx = w.x + w.w / 2;
               const cy = w.y + w.h / 2;
-              if (Math.abs(n.ballX - cx) / w.w > Math.abs(n.ballY - cy) / w.h) {
+              const pushX = n.ballX - cx;
+              const pushY = n.ballY - cy;
+              if (Math.abs(pushX) / w.w > Math.abs(pushY) / w.h) {
                 n.ballVX = -n.ballVX;
-                n.ballX = n.ballX < cx ? w.x - 12 : w.x + w.w + 12;
+                n.ballX = pushX > 0 ? w.x + w.w + ballR : w.x - ballR;
               } else {
                 n.ballVY = -n.ballVY;
-                n.ballY = n.ballY < cy ? w.y - 12 : w.y + w.h + 12;
+                n.ballY = pushY > 0 ? w.y + w.h + ballR : w.y - ballR;
               }
             }
           }
