@@ -150,7 +150,7 @@ export default function MartinGame() {
   const greaseCdRef = useRef(0);
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
-  const carRef = useRef<CarState>({ x: 300, y: 220, angle: Math.PI, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0, scene: "garage" });
+  const carRef = useRef<CarState>({ x: 350, y: 200, angle: Math.PI * 0.7, speed: 0, gear: 1, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0, scene: "garage" });
   const garageDoorOpen = useRef(false);
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
@@ -1344,8 +1344,10 @@ export default function MartinGame() {
     const car = carRef.current;
     if ((m.scene === "outside" || m.scene === "garage") && !car.inCar && dist(m.x, m.y, car.x, car.y) < 60) {
       car.inCar = true;
-      car.gear = 0;
-      showToast("🚗 Press W to start, 1-4 gears, R reverse, H headlights, E exit");
+      car.gear = 1;
+      car.engineRunning = true;
+      sound.play("engineStart");
+      showToast("🚗 Hold W to drive! G: garage door • E: exit car");
       return;
     }
     if (car.inCar) {
@@ -1875,11 +1877,11 @@ export default function MartinGame() {
         }
 
         // Acceleration
-        const accel = car.engineRunning && car.gas > 0 ? 0.04 * car.gear * (dt / 16) : 0;
+        const accel = car.engineRunning && car.gas > 0 ? 0.12 * car.gear * (dt / 16) : 0;
         car.speed += accel;
 
         // Friction / braking
-        if (!k.up && !k.down) car.speed *= 0.97;
+        if (!k.up && !k.down) car.speed *= 0.96;
         if (k.down && car.gear === 0) car.speed *= 0.92;
 
         // Speed limits per gear
@@ -1965,7 +1967,7 @@ export default function MartinGame() {
 
         // Car door detection — drive through doors
         for (const d of scene.doors) {
-          if (car.x > d.x - 20 && car.x < d.x + d.w + 20 && car.y > d.y - 20 && car.y < d.y + d.h + 20) {
+          if (car.x > d.x - 40 && car.x < d.x + d.w + 40 && car.y > d.y - 40 && car.y < d.y + d.h + 40) {
             if (d.targetScene === "apartments") continue;
             if (d.targetScene === "garage" && car.scene === "outside") {
               if (!garageDoorOpen.current) {
