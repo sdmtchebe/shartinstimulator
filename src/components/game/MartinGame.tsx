@@ -1854,7 +1854,7 @@ export default function MartinGame() {
         car.x += Math.cos(car.driftAngle) * car.speed;
         car.y += Math.sin(car.driftAngle) * car.speed;
 
-        // Wall collision
+        // Wall collision — bounce back
         for (const w of SCENES.outside.walls) {
           if (w.w < 30 && w.h < 30) continue;
           const cx2 = clamp(car.x, w.x, w.x + w.w);
@@ -1864,9 +1864,41 @@ export default function MartinGame() {
             const pa = Math.atan2(cdy, cdx);
             car.x = cx2 + Math.cos(pa) * 31;
             car.y = cy2 + Math.sin(pa) * 31;
-            car.speed *= -0.3;
+            const bounceForce = Math.abs(car.speed) * 0.6;
+            car.speed *= -0.5;
+            stats.shake = Math.min(8, Math.abs(car.speed) * 2);
+            sound.play("thud");
+            showToast(`💥 CRASH! Bounced off wall`);
           }
         }
+
+        // NPC collision — fling NPCs backward
+        if (Math.abs(car.speed) > 0.8) {
+          for (const n of npcsRef.current) {
+            if (n.scene !== "outside" || n.transformed) continue;
+            const npcDist = dist(car.x, car.y, n.x, n.y);
+            if (npcDist < 45) {
+              const angle = Math.atan2(n.y - car.y, n.x - car.x);
+              const force = Math.abs(car.speed) * 15;
+              n.x += Math.cos(angle) * force;
+              n.y += Math.sin(angle) * force;
+              n.x = clamp(n.x, 60, SCENES.outside.width - 60);
+              n.y = clamp(n.y, 60, SCENES.outside.height - 60);
+              n.targetX = n.x; n.targetY = n.y;
+              n.reactionEmoji = "😱";
+              n.reactionTimer = 2000;
+              n.emotion = "shocked";
+              n.emotionTimer = 2000;
+              n.friendship = Math.max(0, n.friendship - 15);
+              stats.shake = 4;
+              sound.play("punch");
+              showToast(`💥 Hit ${n.def.name}! Bounced off the car!`);
+              car.speed *= 0.7;
+              break;
+            }
+          }
+        }
+
         car.x = clamp(car.x, 40, SCENES.outside.width - 40);
         car.y = clamp(car.y, 40, SCENES.outside.height - 40);
 
