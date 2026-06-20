@@ -233,7 +233,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Challenge to HORSE ($10 bet)", emoji: "🏀" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1500, targetY: 530 },
+      { startHour: 10, endHour: 18.83, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
       { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
@@ -352,7 +352,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "scared",
     specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1070, targetY: 480 },
+      { startHour: 10, endHour: 18.83, scene: "tutorat", activity: "wander", targetX: 420, targetY: 300 },
       { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
@@ -410,7 +410,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
     schedule: [
-      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 850, targetY: 1920 },
+      { startHour: 10, endHour: 18.83, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
       { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
