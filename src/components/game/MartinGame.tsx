@@ -1382,6 +1382,14 @@ export default function MartinGame() {
 
     for (const d of scene.doors) {
       if (m.x > d.x - 30 && m.x < d.x + d.w + 30 && m.y > d.y - 30 && m.y < d.y + d.h + 30) {
+        if (d.targetScene === "apartments") {
+          setDialog({
+            title: "Private Property", emoji: "🚫",
+            body: "Private property you fatass.",
+            choices: [{ label: "Walk away", onSelect: () => setDialog(null) }],
+          });
+          return;
+        }
         moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y); return;
       }
     }
@@ -1883,7 +1891,7 @@ export default function MartinGame() {
         }
       }
 
-      const currentHour = (stats.timeSec / DAY_LENGTH_SECONDS) * 24;
+      const currentHour = ((stats.timeSec / DAY_LENGTH_SECONDS) * (DAY_END_HOUR - DAY_START_HOUR)) + DAY_START_HOUR;
       const npcs = npcsRef.current;
 
       function getCurrentScheduleEntry(npc: NpcRuntime, hour: number) {
