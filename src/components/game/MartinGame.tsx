@@ -141,6 +141,9 @@ export default function MartinGame() {
   const hellPickupsRef = useRef<{ x: number; y: number; type: "gun" | "food"; active: boolean; timer: number; lifetime: number }[]>([]);
   const playerGunRef = useRef<{ active: boolean; ammo: number; timer: number } | null>(null);
   const punchCdRef = useRef(0);
+  const greaseCdRef = useRef(0);
+  const hellWelcomeRef = useRef(0);
+  const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
   const flightAnimRef = useRef<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null); flightAnimRef.current = flightAnim;
@@ -1503,7 +1506,26 @@ export default function MartinGame() {
       const k = keysRef.current;
       const now = performance.now();
       if (k.interact && !prevI && !dialogRef.current && !fightRef.current && !showPhoneRef.current && !flightAnimRef.current && !showStart) {
-        if (now - lastInteractRef.current > 200) { lastInteractRef.current = now; tryInteract(); }
+        if (now - lastInteractRef.current > 200) {
+          lastInteractRef.current = now;
+          // Grease attack in hell
+          if (martinRef.current.scene === "hell" && hellBossRef.current && greaseCdRef.current <= 0) {
+            const boss = hellBossRef.current;
+            const m = martinRef.current;
+            const angle = Math.atan2(boss.y - m.y, boss.x - m.x);
+            const speed = 6;
+            greaseProjectilesRef.current.push({
+              x: m.x, y: m.y,
+              vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+              active: true,
+            });
+            greaseCdRef.current = 800;
+            sound.play("swish");
+            showToast("🛢️ Grease attack!");
+          } else {
+            tryInteract();
+          }
+        }
       }
       if (k.phone && !prevP && !showStart) {
         if (now - lastPhoneRef.current > 250) {
@@ -1664,6 +1686,23 @@ export default function MartinGame() {
           }
         }
         hellProjectilesRef.current = hellProjectilesRef.current.filter((p) => p.active);
+        // Grease projectiles
+        greaseCdRef.current = Math.max(0, greaseCdRef.current - dt);
+        hellWelcomeRef.current = Math.max(0, hellWelcomeRef.current - dt);
+        for (const g of greaseProjectilesRef.current) {
+          if (!g.active) continue;
+          g.x += g.vx * (dt / 16);
+          g.y += g.vy * (dt / 16);
+          if (g.x < 0 || g.x > scene.width || g.y < 0 || g.y > scene.height) { g.active = false; continue; }
+          if (boss && dist(g.x, g.y, boss.x, boss.y) < 80) {
+            boss.hp -= 15;
+            g.active = false;
+            stats.shake = 5;
+            sound.play("punch");
+            showToast("🛢️ Grease hits Charle! -15 dmg");
+          }
+        }
+        greaseProjectilesRef.current = greaseProjectilesRef.current.filter((g) => g.active);
         if (gunSpawnCdRef.current <= 0) {
           hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "gun", active: true, timer: 0, lifetime: 12000 });
           gunSpawnCdRef.current = 6000 + Math.random() * 4000;
@@ -2261,12 +2300,13 @@ export default function MartinGame() {
           triggerTransition();
           sound.play("door");
           showToast("✈️ Welcome to HELL. Enjoy your stay.");
+          hellWelcomeRef.current = 10000;
           visitScene("hell");
           saveGame();
         }
       }
 
-      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current);
+      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current);
       eatTimerRef.current = Math.max(0, eatTimerRef.current - dt);
       if (ballAnimRef.current) {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
@@ -2441,6 +2481,7 @@ function render(
   hellBoss: { hp: number; hpMax: number; x: number; y: number; punchCd: number; barrageCd: number; walkPhase: number; dir: Direction } | null,
   hellProjectiles: { x: number; y: number; vx: number; vy: number; damage: number; active: boolean; emoji: string }[],
   hellPickups: { x: number; y: number; type: "gun" | "food"; active: boolean; timer: number; lifetime: number }[],
+  greaseProjectiles: { x: number; y: number; vx: number; vy: number; active: boolean }[],
 ) {
   const w = canvas.clientWidth; const h = canvas.clientHeight;
   const shakeX = (Math.random() - 0.5) * stats.shake;
@@ -2549,6 +2590,21 @@ function render(
       ctx.font = "20px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(proj.emoji, proj.x, proj.y);
     }
+    // Grease projectiles
+    for (const g of greaseProjectiles) {
+      if (!g.active) continue;
+      const trail = 8;
+      ctx.strokeStyle = "rgba(80, 60, 20, 0.8)";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(g.x, g.y);
+      ctx.lineTo(g.x - g.vx * trail, g.y - g.vy * trail);
+      ctx.stroke();
+      ctx.fillStyle = "#5a4a20";
+      ctx.beginPath(); ctx.arc(g.x, g.y, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#8a7a40";
+      ctx.beginPath(); ctx.arc(g.x, g.y, 4, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -2606,6 +2662,17 @@ function render(
     ctx.strokeRect(bx, by, barW, barH);
     ctx.fillStyle = "#fff"; ctx.font = "bold 9px 'Press Start 2P', monospace"; ctx.textAlign = "center";
     ctx.fillText(`CHARLE THE COLOSSUS ${Math.ceil(hellBoss.hp)}/${hellBoss.hpMax}`, w / 2, by - 4);
+
+    // Welcome text
+    if (hellWelcomeRef.current > 0) {
+      const alpha = Math.min(1, hellWelcomeRef.current / 1000);
+      ctx.fillStyle = `rgba(255, 180, 40, ${alpha})`;
+      ctx.font = "bold 14px 'Press Start 2P', monospace"; ctx.textAlign = "center";
+      ctx.fillText("Welcome to Hell!", w / 2, h / 2 - 40);
+      ctx.font = "10px 'Press Start 2P', monospace";
+      ctx.fillText("Defeat Charle to come back", w / 2, h / 2 - 15);
+      ctx.fillText("Use SPACE to use Grease Attack!", w / 2, h / 2 + 10);
+    }
   }
 
   // Night overlay — stars, moon, darkness
