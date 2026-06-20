@@ -150,7 +150,7 @@ export default function MartinGame() {
   const greaseCdRef = useRef(0);
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
-  const carRef = useRef<CarState>({ x: 350, y: 200, angle: Math.PI * 0.7, speed: 0, gear: 1, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0, scene: "garage" });
+  const carRef = useRef<CarState>({ x: 300, y: 150, angle: Math.PI * 0.65, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0, scene: "garage" });
   const garageDoorOpen = useRef(false);
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
@@ -1344,10 +1344,8 @@ export default function MartinGame() {
     const car = carRef.current;
     if ((m.scene === "outside" || m.scene === "garage") && !car.inCar && dist(m.x, m.y, car.x, car.y) < 60) {
       car.inCar = true;
-      car.gear = 1;
-      car.engineRunning = true;
-      sound.play("engineStart");
-      showToast("🚗 Hold W to drive! G: garage door • E: exit car");
+      car.gear = 0;
+      showToast("🚗 Hold W to start engine & drive • G: garage door • E: exit car");
       return;
     }
     if (car.inCar) {
@@ -1456,7 +1454,7 @@ export default function MartinGame() {
           car.scene = "garage";
           if (car.inCar) {
             car.inCar = false;
-            car.x = 300; car.y = 220; car.angle = Math.PI;
+            car.x = 300; car.y = 150; car.angle = Math.PI * 0.65;
             car.speed = 0; car.gear = 0; car.engineRunning = false;
             moveToScene("garage", d.targetPos.x, d.targetPos.y);
             showToast("🚗 Parked in garage");
@@ -1974,8 +1972,8 @@ export default function MartinGame() {
                 showToast("🚫 Garage door is CLOSED! Press G near the door to open it.");
                 car.speed *= -0.5;
               } else {
-                car.scene = "garage";
-                car.x = 300; car.y = 220; car.angle = Math.PI;
+              car.scene = "garage";
+              car.x = 300; car.y = 150; car.angle = Math.PI * 0.65;
                 car.speed = 0; car.gear = 0; car.engineRunning = false;
                 car.inCar = false;
                 m.scene = "garage"; m.x = car.x; m.y = car.y;

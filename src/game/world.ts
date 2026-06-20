@@ -978,7 +978,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 580, y: 0, w: 20, h: 400 },
     ],
     doors: [
-      { id: "exit", x: 370, y: 370, w: 80, h: 30, targetScene: "outside", targetPos: { x: 560, y: 530 }, label: "Outside", color: COLORS.doorway },
+      { id: "exit", x: 350, y: 320, w: 100, h: 30, targetScene: "outside", targetPos: { x: 560, y: 530 }, label: "Outside", color: COLORS.doorway },
     ],
     interactables: [
       { id: "garage-tools", x: 80, y: 60, w: 100, h: 80, label: "Old Zastava toolbox (rusty wrenches)", type: "easter-text", emoji: "🔧" },
