@@ -164,6 +164,7 @@ export interface CarState {
   steerAngle: number;
   driftAngle: number;
   rpm: number;
+  scene: SceneId;
 }
 
 export interface Quest { id: string; label: string; }
