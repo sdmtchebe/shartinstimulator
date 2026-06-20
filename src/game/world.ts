@@ -452,7 +452,7 @@ export const SCENES: Record<string, SceneDef> = {
     bgColor: "#7a4a28", bgPattern: "wood", spawnPos: { x: 420, y: 580 },
     walls: [...stdWalls(900, 700), { x: 30, y: 280, w: 360, h: 20 }],
     doors: [
-      { id: "exit", x: 410, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 440, y: 510 }, label: "Outside", color: COLORS.doorway },
+      { id: "exit", x: 410, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 440, y: 530 }, label: "Outside", color: COLORS.doorway },
       { id: "to-basement", x: 380, y: 350, w: 80, h: 50, targetScene: "basement", targetPos: { x: 400, y: 510 }, label: "↓ Basement", color: "#3a1010" },
       { id: "to-upstairs", x: 540, y: 350, w: 80, h: 50, targetScene: "upstairs", targetPos: { x: 400, y: 510 }, label: "↑ Mom", color: "#603030" },
       { id: "to-hidden", x: 760, y: 560, w: 30, h: 30, targetScene: "hidden-room", targetPos: { x: 300, y: 420 }, label: "???", color: "#0a0505" },
