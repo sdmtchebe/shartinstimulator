@@ -1964,6 +1964,7 @@ export default function MartinGame() {
         car.y = clamp(car.y, 40, SCENES[car.scene].height - 40);
 
         // Car door detection — drive through doors
+        let doorTriggered = false;
         for (const d of scene.doors) {
           if (car.x > d.x - 60 && car.x < d.x + d.w + 60 && car.y > d.y - 60 && car.y < d.y + d.h + 60) {
             if (d.targetScene === "apartments") continue;
@@ -1972,27 +1973,32 @@ export default function MartinGame() {
                 showToast("🚫 Garage door is CLOSED! Press G near the door to open it.");
                 car.speed *= -0.5;
               } else {
-              car.scene = "garage";
-              car.x = 400; car.y = 120; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
+                car.scene = "garage";
+                car.x = 400; car.y = 120; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
                 car.speed = 0; car.gear = 0; car.engineRunning = false;
                 car.inCar = false;
                 m.scene = "garage"; m.x = car.x; m.y = car.y;
                 showToast("🚗 Parked in garage");
               }
+              doorTriggered = true; break;
             }
             if (d.targetScene === "outside" && car.scene === "garage") {
               car.scene = "outside";
-              car.x = 560; car.y = 530; car.angle = Math.PI / 2;
+              car.x = 560; car.y = 530; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
               car.speed = 0; car.gear = 0; car.engineRunning = false;
+              car.inCar = false;
               m.scene = "outside"; m.x = car.x; m.y = car.y;
               triggerTransition();
               showToast("🚗 Drove out of garage");
+              doorTriggered = true; break;
             }
-            // For other doors, just block the car
+            // Other doors — block car
             car.speed *= -0.5;
-            return;
+            doorTriggered = true; break;
           }
         }
+        if (doorTriggered) { /* skip rest of car physics */ }
+        else {
 
         // Gas
         if (car.engineRunning && Math.abs(car.speed) > 0.1) {
@@ -2038,6 +2044,7 @@ export default function MartinGame() {
         }
         m.x = clamp(m.x, 30 + PLAYER_RADIUS, scene.width - 30 - PLAYER_RADIUS);
         m.y = clamp(m.y, 30 + PLAYER_RADIUS, scene.height - 30 - PLAYER_RADIUS);
+        } // end else (not doorTriggered)
       } else {
         stats.shake *= 0.85;
       }
