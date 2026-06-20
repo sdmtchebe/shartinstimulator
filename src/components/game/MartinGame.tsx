@@ -7,7 +7,7 @@ import HUD from "./HUD";
 import DialogPanel from "./DialogPanel";
 import PhoneMenu from "./PhoneMenu";
 
-interface KeyState { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean; phone: boolean; mute: boolean; gear1: boolean; gear2: boolean; gear3: boolean; gear4: boolean; reverse: boolean; headlights: boolean; neutral: boolean; garageDoor: boolean; }
+interface KeyState { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean; phone: boolean; mute: boolean; gear1: boolean; gear2: boolean; gear3: boolean; gear4: boolean; reverse: boolean; headlights: boolean; neutral: boolean; garageDoor: boolean; startEngine: boolean; }
 
 interface ShadowChud {
   x: number; y: number;
@@ -33,7 +33,7 @@ const KEY_MAP: Record<string, keyof KeyState> = {
   ArrowDown: "down", s: "down", S: "down",
   ArrowLeft: "left", a: "left", A: "left",
   ArrowRight: "right", d: "right", D: "right",
-  e: "interact", E: "interact", " ": "interact", Enter: "interact",
+  e: "interact", E: "interact", Enter: "interact",
   p: "phone", P: "phone",
   m: "mute", M: "mute",
   "1": "gear1", "2": "gear2", "3": "gear3", "4": "gear4",
@@ -41,6 +41,7 @@ const KEY_MAP: Record<string, keyof KeyState> = {
   h: "headlights", H: "headlights",
   n: "neutral", N: "neutral",
   g: "garageDoor", G: "garageDoor",
+  " ": "startEngine",
 };
 
 function makeNpcs(): NpcRuntime[] {
@@ -1861,12 +1862,12 @@ export default function MartinGame() {
         if (k.neutral && car.gear !== 0) { car.gear = 0; showToast("⚙️ Neutral"); }
         if (k.headlights) { car.headlights = !car.headlights; showToast(car.headlights ? "🔦 Headlights ON" : "🔦 Headlights OFF"); }
 
-        // Engine start with W when stopped
-        if (!car.engineRunning && k.up && car.gas > 0) {
+        // Engine start with SPACEBAR when stopped (hold to start)
+        if (!car.engineRunning && k.startEngine && car.gas > 0) {
           car.engineRunning = true;
           if (car.gear === 0) car.gear = 1; // auto-shift to 1st
           sound.play("engineStart");
-          showToast("🚗 Engine started! Gear 1");
+          showToast("🚗 Engine started! Gear 1 - Use W to accelerate");
         }
 
         // Engine off in neutral when stopped
@@ -1927,8 +1928,7 @@ export default function MartinGame() {
               car.y = cy2 + Math.sin(pa) * 31;
               car.speed *= -0.5;
               stats.shake = Math.min(8, Math.abs(car.speed) * 2);
-              sound.play("thud");
-              showToast(`💥 CRASH!`);
+              sound.play("carBounce");
             }
           }
         }
@@ -2002,9 +2002,23 @@ export default function MartinGame() {
         }
         car.rpm = car.engineRunning ? Math.abs(car.speed) * 200 + (car.gear > 0 ? car.gear * 500 : 0) : 0;
 
-        // Engine sound
-        if (car.engineRunning && Math.random() < 0.03 + car.rpm * 0.00002) {
-          sound.play("engineRev");
+        // Engine sound - idle and driving
+        if (car.engineRunning) {
+          if (Math.abs(car.speed) > 0.5) {
+            // Driving sound
+            if (Math.random() < 0.08 + car.rpm * 0.00003) {
+              sound.play("engineDrive");
+            }
+          } else {
+            // Idle sound
+            if (Math.random() < 0.02) {
+              sound.play("engineIdle");
+            }
+          }
+          // Occasional engine rev
+          if (Math.random() < 0.015 + car.rpm * 0.00001) {
+            sound.play("engineRev");
+          }
         }
 
         // Player follows car
