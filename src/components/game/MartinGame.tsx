@@ -1509,11 +1509,11 @@ export default function MartinGame() {
         if (now - lastInteractRef.current > 200) {
           lastInteractRef.current = now;
           // Grease attack in hell
-          if (martinRef.current.scene === "hell" && hellBossRef.current && greaseCdRef.current <= 0) {
-            const boss = hellBossRef.current;
+          if (martinRef.current.scene === "hell" && greaseCdRef.current <= 0) {
+            const target = hellBossRef.current ?? { x: 1000, y: 750 };
             const m = martinRef.current;
-            const angle = Math.atan2(boss.y - m.y, boss.x - m.x);
-            const speed = 6;
+            const angle = Math.atan2(target.y - m.y, target.x - m.x);
+            const speed = 10;
             greaseProjectilesRef.current.push({
               x: m.x, y: m.y,
               vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
@@ -1686,23 +1686,6 @@ export default function MartinGame() {
           }
         }
         hellProjectilesRef.current = hellProjectilesRef.current.filter((p) => p.active);
-        // Grease projectiles
-        greaseCdRef.current = Math.max(0, greaseCdRef.current - dt);
-        hellWelcomeRef.current = Math.max(0, hellWelcomeRef.current - dt);
-        for (const g of greaseProjectilesRef.current) {
-          if (!g.active) continue;
-          g.x += g.vx * (dt / 16);
-          g.y += g.vy * (dt / 16);
-          if (g.x < 0 || g.x > scene.width || g.y < 0 || g.y > scene.height) { g.active = false; continue; }
-          if (boss && dist(g.x, g.y, boss.x, boss.y) < 80) {
-            boss.hp -= 15;
-            g.active = false;
-            stats.shake = 5;
-            sound.play("punch");
-            showToast("🛢️ Grease hits Charle! -15 dmg");
-          }
-        }
-        greaseProjectilesRef.current = greaseProjectilesRef.current.filter((g) => g.active);
         if (gunSpawnCdRef.current <= 0) {
           hellPickupsRef.current.push({ x: 100 + Math.random() * 1800, y: 100 + Math.random() * 1300, type: "gun", active: true, timer: 0, lifetime: 12000 });
           gunSpawnCdRef.current = 6000 + Math.random() * 4000;
@@ -1748,6 +1731,29 @@ export default function MartinGame() {
           hellPickupsRef.current = [];
           playerGunRef.current = null;
         }
+      }
+
+      // Grease attack updates (always run in hell)
+      greaseCdRef.current = Math.max(0, greaseCdRef.current - dt);
+      hellWelcomeRef.current = Math.max(0, hellWelcomeRef.current - dt);
+      if (m.scene === "hell") {
+        for (const g of greaseProjectilesRef.current) {
+          if (!g.active) continue;
+          g.x += g.vx * (dt / 16);
+          g.y += g.vy * (dt / 16);
+          if (g.x < 0 || g.x > scene.width || g.y < 0 || g.y > scene.height) { g.active = false; continue; }
+          const boss = hellBossRef.current;
+          if (boss && dist(g.x, g.y, boss.x, boss.y) < 90) {
+            boss.hp -= 15;
+            g.active = false;
+            stats.shake = 8;
+            sound.play("punch");
+            showToast("🛢️ GREASE HITS CHARLE! -15 HP");
+          }
+        }
+        greaseProjectilesRef.current = greaseProjectilesRef.current.filter((g) => g.active);
+      } else {
+        greaseProjectilesRef.current = [];
       }
 
       if (!stats.dead && !dialogActive) {
@@ -2593,16 +2599,25 @@ function render(
     // Grease projectiles
     for (const g of greaseProjectiles) {
       if (!g.active) continue;
-      const trail = 8;
-      ctx.strokeStyle = "rgba(80, 60, 20, 0.8)";
-      ctx.lineWidth = 6;
+      // Glow
+      const glow = ctx.createRadialGradient(g.x, g.y, 4, g.x, g.y, 25);
+      glow.addColorStop(0, "rgba(255, 200, 50, 0.6)");
+      glow.addColorStop(1, "rgba(255, 100, 0, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(g.x, g.y, 25, 0, Math.PI * 2); ctx.fill();
+      // Trail
+      ctx.strokeStyle = "rgba(255, 180, 40, 0.9)";
+      ctx.lineWidth = 8;
       ctx.beginPath();
       ctx.moveTo(g.x, g.y);
-      ctx.lineTo(g.x - g.vx * trail, g.y - g.vy * trail);
+      ctx.lineTo(g.x - g.vx * 6, g.y - g.vy * 6);
       ctx.stroke();
-      ctx.fillStyle = "#5a4a20";
-      ctx.beginPath(); ctx.arc(g.x, g.y, 8, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#8a7a40";
+      // Body
+      ctx.fillStyle = "#ffaa20";
+      ctx.beginPath(); ctx.arc(g.x, g.y, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#ff6600"; ctx.lineWidth = 2; ctx.stroke();
+      // Center highlight
+      ctx.fillStyle = "#ffdd80";
       ctx.beginPath(); ctx.arc(g.x, g.y, 4, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
