@@ -555,7 +555,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 320, y: 1700, w: 260, h: 200, color: "#8a3060", label: "McMoggayla Strip Club" },
       { x: 720, y: 1700, w: 260, h: 200, color: "#3a5a78", label: "Fishing Dock" },
       { x: 1120, y: 1700, w: 260, h: 200, color: "#6a4a3a", label: "NPC Apartments" },
-      { x: 1520, y: 1700, w: 260, h: 200, color: "#403060", label: "Sus Salon" },
+      { x: 1520, y: 1700, w: 260, h: 200, color: "#2a7a2a", label: "Gas Station" },
       { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
       // Airport — top left corner
       { x: 50, y: 50, w: 300, h: 220, color: "#4a5a6a", label: "Martin Int'l Airport" },
@@ -574,6 +574,7 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-strip", x: 430, y: 1880, w: 60, h: 30, targetScene: "stripclub", targetPos: { x: 400, y: 580 }, label: "Strip Club", color: "#ff80c0" },
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
       { id: "d-apartments", x: 1230, y: 1880, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "NPC Apts", color: "#8a6a4a" },
+      { id: "d-gas", x: 1640, y: 1880, w: 60, h: 30, targetScene: "gas-station", targetPos: { x: 400, y: 580 }, label: "Gas Station", color: "#2a8a2a" },
       { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
       { id: "d-airport", x: 200, y: 250, w: 60, h: 30, targetScene: "airport", targetPos: { x: 500, y: 580 }, label: "Airport", color: "#a0b0c0" },
     ],
@@ -591,7 +592,7 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 320, y: 1700, w: 260, h: 200, label: "McMoggayla Strip Club" },
       { x: 720, y: 1700, w: 260, h: 200, label: "Fishing Dock" },
       { x: 1120, y: 1700, w: 260, h: 200, label: "NPC Apartments" },
-      { x: 1520, y: 1700, w: 260, h: 200, label: "Sus Salon" },
+      { x: 1520, y: 1700, w: 260, h: 200, label: "Gas Station" },
       { x: 1920, y: 1700, w: 260, h: 200, label: "MoggMcCrackeggayla Boutique" },
       { x: 50, y: 50, w: 300, h: 220, label: "Martin Int'l Airport" },
     ],
@@ -962,6 +963,20 @@ export const SCENES: Record<string, SceneDef> = {
       // Key spawns (small chance items on the floor)
       { id: "apt-key-1", x: 350, y: 200, w: 30, h: 20, label: "A key on the floor", type: "quest-item", emoji: "🔑" },
       { id: "apt-key-2", x: 600, y: 500, w: 30, h: 20, label: "A key under the couch", type: "quest-item", emoji: "🔑" },
+    ],
+  },
+
+  "gas-station": {
+    id: "gas-station", name: "Gas Station", width: 900, height: 700,
+    bgColor: "#3a4a3a", bgPattern: "concrete", spawnPos: { x: 400, y: 580 },
+    walls: stdWalls(900, 700),
+    doors: [{ id: "exit", x: 380, y: 660, w: 80, h: 40, targetScene: "outside", targetPos: { x: 1660, y: 1920 }, label: "Outside", color: COLORS.doorway }],
+    interactables: [
+      { id: "gas-pump", x: 350, y: 250, w: 120, h: 60, label: "Refuel Car ($10)", type: "easter-text", emoji: "⛽" },
+      { id: "gas-station-sign", x: 300, y: 80, w: 200, h: 60, label: "BALKAN GAS — Premium Chud Fuel", type: "easter-text", emoji: "⛽" },
+      { id: "gas-shop", x: 600, y: 100, w: 180, h: 140, label: "Gas Station Shop (closed since 1998)", type: "easter-text", emoji: "🏪" },
+      { id: "gas-oil", x: 100, y: 350, w: 80, h: 80, label: "Oil barrels (probably expired)", type: "decor-eat", emoji: "🛢️" },
+      { id: "gas-tire", x: 700, y: 400, w: 80, h: 80, label: "Stack of tires (Zastava brand)", type: "easter-text", emoji: "🛞" },
     ],
   },
 };

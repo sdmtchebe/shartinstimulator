@@ -5,7 +5,7 @@ type SoundType =
   | "fishCast" | "fishCatch" | "tvStatic"
   | "burp" | "thud" | "soccerKick" | "cousinChomp"
   | "select" | "victory" | "defeat" | "cheer" | "shock"
-  | "questDone" | "shutter";
+  | "questDone" | "shutter" | "engineStart" | "engineRev";
 
 class SoundManager {
   private ctx: AudioContext | null = null;
@@ -115,6 +115,8 @@ class SoundManager {
       case "shock": tone(880, "square", 0.18, 0.08, 1320); setTimeout(() => tone(1320, "square", 0.18, 0.08, 880), 60); break;
       case "shutter": noise(0.07, 0.3, 3000, "highpass"); break;
       case "questDone": [659, 784, 988, 1175].forEach((f, i) => setTimeout(() => tone(f, "triangle", 0.16, 0.13), i * 80)); break;
+      case "engineStart": tone(80, "sawtooth", 0.4, 0.3, 120); noise(0.2, 0.3, 400); break;
+      case "engineRev": tone(200, "sawtooth", 0.25, 0.15, 400); tone(300, "square", 0.15, 0.1, 500); break;
     }
   }
 

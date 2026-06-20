@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SCENES, NPC_DEFS, MOLDY_FOODS, STREET_FOODS, FIGHTERS, CHUD_ACTIVITIES, ALL_QUESTS, DAY_LENGTH_SECONDS, DAY_START_HOUR, DAY_END_HOUR, PLAYER_SPEED, PLAYER_RADIUS, CALL_SCRIPTS, DAILY_EVENTS, SCENE_INTERESTS } from "@/game/world";
-import type { Direction, GameStats, Interactable, MartinState, NpcDef, NpcRuntime, SceneId } from "@/game/types";
+import type { Direction, GameStats, Interactable, MartinState, NpcDef, NpcRuntime, SceneId, CarState } from "@/game/types";
 import { clamp, dist, randomChoice, randomInt } from "@/lib/utils";
 import { sound } from "@/game/sound";
 import HUD from "./HUD";
 import DialogPanel from "./DialogPanel";
 import PhoneMenu from "./PhoneMenu";
 
-interface KeyState { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean; phone: boolean; mute: boolean; }
+interface KeyState { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean; phone: boolean; mute: boolean; gear1: boolean; gear2: boolean; gear3: boolean; gear4: boolean; reverse: boolean; headlights: boolean; neutral: boolean; }
 
 interface ShadowChud {
   x: number; y: number;
@@ -36,6 +36,10 @@ const KEY_MAP: Record<string, keyof KeyState> = {
   e: "interact", E: "interact", " ": "interact", Enter: "interact",
   p: "phone", P: "phone",
   m: "mute", M: "mute",
+  "1": "gear1", "2": "gear2", "3": "gear3", "4": "gear4",
+  r: "reverse", R: "reverse",
+  h: "headlights", H: "headlights",
+  n: "neutral", N: "neutral",
 };
 
 function makeNpcs(): NpcRuntime[] {
@@ -124,7 +128,7 @@ export default function MartinGame() {
   const martinRef = useRef<MartinState>(savedData?.martin ?? { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100 });
   const statsRef = useRef<GameStats>(savedData?.stats ?? initialStats());
   const npcsRef = useRef<NpcRuntime[]>(savedData?.npcs ?? makeNpcs());
-  const keysRef = useRef<KeyState>({ up: false, down: false, left: false, right: false, interact: false, phone: false, mute: false });
+  const keysRef = useRef<KeyState>({ up: false, down: false, left: false, right: false, interact: false, phone: false, mute: false, gear1: false, gear2: false, gear3: false, gear4: false, reverse: false, headlights: false, neutral: false });
   const lastInteractRef = useRef(0);
   const lastPhoneRef = useRef(0);
   const lastMuteRef = useRef(0);
@@ -144,6 +148,7 @@ export default function MartinGame() {
   const greaseCdRef = useRef(0);
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
+  const carRef = useRef<CarState>({ x: 320, y: 560, angle: Math.PI / 2, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0 });
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
   const flightAnimRef = useRef<{ phase: "idle" | "takeoff" | "flying" | "landing"; timer: number; } | null>(null); flightAnimRef.current = flightAnim;
@@ -1332,6 +1337,40 @@ export default function MartinGame() {
     );
     if (nearbyNpc) { interactWithNpc(nearbyNpc); return; }
 
+    // Car interaction
+    const car = carRef.current;
+    if (m.scene === "outside" && !car.inCar && dist(m.x, m.y, car.x, car.y) < 60) {
+      car.inCar = true;
+      car.gear = 0;
+      showToast("🚗 Press W to start, 1-4 gears, R reverse, H headlights, E exit");
+      return;
+    }
+    if (car.inCar) {
+      car.inCar = false;
+      car.engineRunning = false;
+      car.speed = 0;
+      car.gear = 0;
+      car.steerAngle = 0;
+      // Place player next to car
+      m.x = car.x + Math.cos(car.angle + Math.PI / 2) * 40;
+      m.y = car.y + Math.sin(car.angle + Math.PI / 2) * 40;
+      showToast("Exited car");
+      return;
+    }
+
+    // Gas station interaction
+    if (m.scene === "gas-station") {
+      if (statsRef.current.money >= 10) {
+        addMoney(-10);
+        car.gas = 100;
+        sound.play("coin");
+        showToast("⛽ Tank refilled! -$10");
+      } else {
+        showToast("⛽ Not enough money ($10 needed)");
+      }
+      return;
+    }
+
     if (m.scene === "hell") {
       for (const p of hellPickupsRef.current) {
         if (!p.active) continue;
@@ -1754,6 +1793,97 @@ export default function MartinGame() {
         greaseProjectilesRef.current = greaseProjectilesRef.current.filter((g) => g.active);
       } else {
         greaseProjectilesRef.current = [];
+      }
+
+      // Car physics
+      const car = carRef.current;
+      const k = keysRef.current;
+      if (car.inCar && m.scene === "outside" && !dialogActive && !fightRef.current) {
+        // Gear shifting (only on key edge - prevent spam)
+        if (k.gear1 && car.gear !== 1) { car.gear = 1; showToast("⚙️ Gear 1"); }
+        if (k.gear2 && car.gear !== 2) { car.gear = 2; showToast("⚙️ Gear 2"); }
+        if (k.gear3 && car.gear !== 3) { car.gear = 3; showToast("⚙️ Gear 3"); }
+        if (k.gear4 && car.gear !== 4) { car.gear = 4; showToast("⚙️ Gear 4"); }
+        if (k.reverse && car.gear !== -1) { car.gear = -1; showToast("⚙️ Reverse"); }
+        if (k.neutral && car.gear !== 0) { car.gear = 0; showToast("⚙️ Neutral"); }
+        if (k.headlights) { car.headlights = !car.headlights; showToast(car.headlights ? "🔦 Headlights ON" : "🔦 Headlights OFF"); }
+
+        // Engine start with W when stopped
+        if (!car.engineRunning && k.up && car.gas > 0) {
+          car.engineRunning = true;
+          sound.play("engineStart");
+          showToast("🚗 Engine started!");
+        }
+
+        // Engine off in neutral when stopped
+        if (car.engineRunning && car.gear === 0 && Math.abs(car.speed) < 0.1) {
+          car.engineRunning = false;
+        }
+
+        // Acceleration
+        const accel = car.engineRunning && car.gas > 0 ? 0.04 * car.gear * (dt / 16) : 0;
+        car.speed += accel;
+
+        // Friction / braking
+        if (!k.up && !k.down) car.speed *= 0.97;
+        if (k.down && car.gear === 0) car.speed *= 0.92;
+
+        // Speed limits per gear
+        const maxSpd = car.gear > 0 ? car.gear * 3 : car.gear === -1 ? -1.5 : 0;
+        if (car.gear !== 0) {
+          if (car.gear > 0) car.speed = Math.min(car.speed, maxSpd);
+          else car.speed = Math.max(car.speed, maxSpd);
+        }
+        car.speed = clamp(car.speed, -2, 12);
+
+        // Steering
+        const steerRate = 0.03 * Math.max(0.5, Math.abs(car.speed) / 3) * (dt / 16);
+        if (k.left) { car.angle -= steerRate; car.steerAngle = Math.max(-1, car.steerAngle - 0.1); }
+        else if (k.right) { car.angle += steerRate; car.steerAngle = Math.min(1, car.steerAngle + 0.1); }
+        else { car.steerAngle *= 0.85; }
+
+        // Drift
+        if (Math.abs(car.speed) > 2.5 && (k.left || k.right)) {
+          car.driftAngle += (car.angle - car.driftAngle) * 0.05;
+        } else {
+          car.driftAngle += (car.angle - car.driftAngle) * 0.15;
+        }
+
+        // Move
+        car.x += Math.cos(car.driftAngle) * car.speed;
+        car.y += Math.sin(car.driftAngle) * car.speed;
+
+        // Wall collision
+        for (const w of SCENES.outside.walls) {
+          if (w.w < 30 && w.h < 30) continue;
+          const cx2 = clamp(car.x, w.x, w.x + w.w);
+          const cy2 = clamp(car.y, w.y, w.y + w.h);
+          const cdx = car.x - cx2; const cdy = car.y - cy2;
+          if (cdx * cdx + cdy * cdy < 900) {
+            const pa = Math.atan2(cdy, cdx);
+            car.x = cx2 + Math.cos(pa) * 31;
+            car.y = cy2 + Math.sin(pa) * 31;
+            car.speed *= -0.3;
+          }
+        }
+        car.x = clamp(car.x, 40, SCENES.outside.width - 40);
+        car.y = clamp(car.y, 40, SCENES.outside.height - 40);
+
+        // Gas
+        if (car.engineRunning && Math.abs(car.speed) > 0.1) {
+          car.gas = Math.max(0, car.gas - Math.abs(car.speed) * 0.003 * (dt / 16));
+          if (car.gas <= 0) { car.engineRunning = false; car.speed = 0; showToast("⛽ Out of gas!"); }
+        }
+        car.rpm = car.engineRunning ? Math.abs(car.speed) * 200 + (car.gear > 0 ? car.gear * 500 : 0) : 0;
+
+        // Engine sound (play periodically based on RPM)
+        if (car.engineRunning && Math.random() < 0.03 + car.rpm * 0.00002) {
+          sound.play("engineRev");
+        }
+
+        // Player follows car
+        m.x = car.x; m.y = car.y;
+        m.walking = Math.abs(car.speed) > 0.3;
       }
 
       if (!stats.dead && !dialogActive) {
@@ -2312,7 +2442,7 @@ export default function MartinGame() {
         }
       }
 
-      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current, hellWelcomeRef.current);
+      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current, hellWelcomeRef.current, carRef.current);
       eatTimerRef.current = Math.max(0, eatTimerRef.current - dt);
       if (ballAnimRef.current) {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
@@ -2448,6 +2578,44 @@ export default function MartinGame() {
         </div>
       )}
 
+      {/* Car HUD when in car */}
+      {!showStart && carRef.current.inCar && (
+        <div className="absolute inset-0 pointer-events-none z-20">
+          {/* Gear / Speed / Gas display */}
+          <div className="absolute bottom-16 left-3 bg-black/80 border border-primary/40 rounded px-4 py-3 pixel-text text-[9px]">
+            <div className="flex gap-4 mb-2">
+              <span className="text-primary">Gear: {carRef.current.gear === 0 ? "N" : carRef.current.gear === -1 ? "R" : carRef.current.gear}</span>
+              <span className="text-foreground">{Math.abs(Math.round(carRef.current.speed * 20))} km/h</span>
+              <span className={carRef.current.headlights ? "text-yellow-400" : "text-muted-foreground"}>🔦 {carRef.current.headlights ? "ON" : "OFF"}</span>
+            </div>
+            <div className="flex gap-3 items-center mb-1">
+              <span className="text-accent">⛽ {Math.round(carRef.current.gas)}%</span>
+              <div className="w-20 h-2 bg-secondary rounded overflow-hidden">
+                <div className={`h-full ${carRef.current.gas > 20 ? "bg-accent" : "bg-destructive"} transition-all`} style={{ width: `${carRef.current.gas}%` }} />
+              </div>
+            </div>
+            <div className="text-[7px] text-muted-foreground mt-1">
+              1-4: gears • R: reverse • N: neutral • H: lights • W: accel • E: exit
+            </div>
+          </div>
+          {/* Steering wheel */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <svg width="80" height="80" viewBox="-40 -40 80 80">
+              <circle cx="0" cy="0" r="35" fill="none" stroke="#8B7355" strokeWidth="6" />
+              <circle cx="0" cy="0" r="30" fill="none" stroke="#6B5335" strokeWidth="2" />
+              <line x1="0" y1="0" x2={Math.sin(carRef.current.steerAngle) * 25} y2={-Math.cos(carRef.current.steerAngle) * 25}
+                stroke="#ddd" strokeWidth="3" strokeLinecap="round" />
+              <circle cx="0" cy="0" r="5" fill="#555" />
+              <text x="0" y="1" textAnchor="middle" dominantBaseline="middle" fill="#999" fontSize="4" fontFamily="monospace">Z</text>
+            </svg>
+          </div>
+          {/* E to exit prompt */}
+          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 bg-black/60 rounded px-3 py-1 pixel-text text-[8px] text-muted-foreground">
+            Press E to exit car
+          </div>
+        </div>
+      )}
+
       {showStart && <StartScreen hasSave={hasSave()} onContinue={() => startGame(false)} onNewGame={() => startGame(true)} />}
     </div>
   );
@@ -2489,6 +2657,7 @@ function render(
   hellPickups: { x: number; y: number; type: "gun" | "food"; active: boolean; timer: number; lifetime: number }[],
   greaseProjectiles: { x: number; y: number; vx: number; vy: number; active: boolean }[],
   hellWelcomeTimer: number,
+  car: CarState,
 ) {
   const w = canvas.clientWidth; const h = canvas.clientHeight;
   const shakeX = (Math.random() - 0.5) * stats.shake;
@@ -2576,6 +2745,11 @@ function render(
       ctx.fillStyle = "#fff"; ctx.textAlign = "center";
       ctx.fillText(txt, n.x, n.y - n.def.size - 44);
     }
+  }
+
+  // Draw car on outside
+  if (scene.id === "outside" && !car.inCar) {
+    drawCar(ctx, car);
   }
 
   drawMartin(ctx, m, eatTimer > 0, stats.hunger, stats.chud);
@@ -3202,6 +3376,85 @@ function drawTransformed(ctx: CanvasRenderingContext2D, n: NpcRuntime) {
       ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = "#000"; ctx.lineWidth = 2; ctx.stroke(); break;
   }
+}
+
+function drawCar(ctx: CanvasRenderingContext2D, car: CarState) {
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.angle + Math.PI / 2);
+
+  // Shadow
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.beginPath(); ctx.ellipse(0, 4, 24, 10, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Body - old Zastava/Yugo shape (boxy)
+  ctx.fillStyle = "#c8a858"; // old beige/brown
+  ctx.beginPath();
+  ctx.roundRect(-20, -32, 40, 64, 4);
+  ctx.fill();
+  ctx.strokeStyle = "#6a5a30"; ctx.lineWidth = 2; ctx.stroke();
+
+  // Roof / top
+  ctx.fillStyle = "#a89040";
+  ctx.beginPath();
+  ctx.roundRect(-16, -24, 32, 30, 3);
+  ctx.fill();
+
+  // Windows
+  ctx.fillStyle = "rgba(100,140,180,0.6)";
+  ctx.fillRect(-14, -22, 12, 18);
+  ctx.fillRect(2, -22, 12, 18);
+  ctx.strokeStyle = "#4a3a20"; ctx.lineWidth = 1;
+  ctx.strokeRect(-14, -22, 12, 18);
+  ctx.strokeRect(2, -22, 12, 18);
+
+  // Windshield
+  ctx.fillStyle = "rgba(120,160,200,0.5)";
+  ctx.fillRect(-14, -30, 28, 10);
+  ctx.strokeRect(-14, -30, 28, 10);
+
+  // Rear window
+  ctx.fillStyle = "rgba(120,160,200,0.5)";
+  ctx.fillRect(-14, 6, 28, 8);
+  ctx.strokeRect(-14, 6, 28, 8);
+
+  // Wheels
+  ctx.fillStyle = "#222";
+  ctx.beginPath(); ctx.ellipse(-18, -18, 5, 8, 0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(18, -18, 5, 8, -0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-18, 16, 5, 8, -0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(18, 16, 5, 8, 0.2, 0, Math.PI * 2); ctx.fill();
+
+  // Headlights
+  if (car.headlights) {
+    ctx.fillStyle = "#ffee88";
+    ctx.beginPath(); ctx.arc(-10, -30, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -30, 4, 0, Math.PI * 2); ctx.fill();
+    // Light beams
+    ctx.fillStyle = "rgba(255,238,136,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(-14, -34); ctx.lineTo(-30, -120); ctx.lineTo(30, -120); ctx.lineTo(14, -34);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = "#888";
+    ctx.beginPath(); ctx.arc(-10, -30, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10, -30, 3, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Taillights
+  ctx.fillStyle = "#cc3333";
+  ctx.beginPath(); ctx.arc(-12, 30, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(12, 30, 3, 0, Math.PI * 2); ctx.fill();
+
+  // Trunk line
+  ctx.strokeStyle = "#5a4a20"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(-16, 10); ctx.lineTo(16, 10); ctx.stroke();
+
+  // "ZASTAVA" badge
+  ctx.fillStyle = "#4a3a20"; ctx.font = "bold 5px monospace"; ctx.textAlign = "center";
+  ctx.fillText("ZASTAVA", 0, -6);
+
+  ctx.restore();
 }
 
 function drawMartin(ctx: CanvasRenderingContext2D, m: MartinState, eating: boolean, hunger: number, chud: number) {

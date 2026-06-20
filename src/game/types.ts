@@ -21,7 +21,8 @@ export type SceneId =
   | "boutique"
   | "airport"
   | "hell"
-  | "apartments";
+  | "apartments"
+  | "gas-station";
 
 export interface Vec2 { x: number; y: number; }
 
@@ -149,57 +150,19 @@ export interface NpcRuntime {
   stuckTimer: number;
 }
 
-export interface FoodItem {
-  id: string;
-  name: string;
-  emoji: string;
-  hunger: number;
-  chud: number;
-}
-
-export interface MartinState {
-  scene: SceneId;
-  x: number; y: number;
-  dir: Direction;
-  walking: boolean;
-  walkPhase: number;
-  hp: number;
-  hpMax: number;
-}
-
-export interface GameStats {
-  money: number;
-  hunger: number;
-  chud: number;
-  day: number;
-  timeSec: number;
-  shake: number;
-  dead: boolean;
-  causeOfDeath: string;
-  tutoratAvailable: boolean;
-  tutoratDoneToday: boolean;
-  totalMoneyEarned: number;
-  fightsWon: number;
-  fightsLost: number;
-  fightsWonToday: number;
-  fightsWonFighters: string[];
-  npcsTransformed: number;
-  foodsEaten: number;
-  shitsToday: number;
-  tutoratStreak: number;
-  calledNpcs: string[];
-  survivedNight: boolean;
-  dailyEvent: string | null;
-  secretsFound: string[];
-  questsCompleted: string[];
-  scenesVisited: string[];
-  tutorialStep: number; // 0 = not started, 1 = fridge, 2 = mom, 3 = toilet, 4 = outside interaction, 5 = complete
-  buttplugQuestStep: number; // 0=none, 1=met MoGgayla, 2=david talked, 3=has hummus, 4=gave david, 5=wolf talked, 6=kai beaten, 7=has buttplug, 8=complete
-  hasHummus: boolean;
-  hasButtplug: boolean;
-  hellDefeated: boolean;
-  hasTicket: boolean;
-  apartmentKeys: string[];
+export interface CarState {
+  x: number;
+  y: number;
+  angle: number;
+  speed: number;
+  gear: number; // 0=neutral, 1-4=forward, -1=reverse
+  gas: number; // 0-100
+  headlights: boolean;
+  engineRunning: boolean;
+  inCar: boolean;
+  steerAngle: number;
+  driftAngle: number;
+  rpm: number;
 }
 
 export interface Quest { id: string; label: string; }
