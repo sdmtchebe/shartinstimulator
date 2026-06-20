@@ -1971,15 +1971,14 @@ export default function MartinGame() {
               if (!garageDoorOpen.current) {
                 showToast("🚫 Garage door is CLOSED! Press G near the door to open it.");
                 car.speed *= -0.5;
-                return;
+              } else {
+                car.scene = "garage";
+                car.x = 300; car.y = 220; car.angle = Math.PI;
+                car.speed = 0; car.gear = 0; car.engineRunning = false;
+                car.inCar = false;
+                m.scene = "garage"; m.x = car.x; m.y = car.y;
+                showToast("🚗 Parked in garage");
               }
-              car.scene = "garage";
-              car.x = 300; car.y = 220; car.angle = Math.PI;
-              car.speed = 0; car.gear = 0; car.engineRunning = false;
-              car.inCar = false;
-              m.scene = "garage"; m.x = car.x; m.y = car.y;
-              showToast("🚗 Parked in garage");
-              return;
             }
             if (d.targetScene === "outside" && car.scene === "garage") {
               car.scene = "outside";
@@ -1988,7 +1987,6 @@ export default function MartinGame() {
               m.scene = "outside"; m.x = car.x; m.y = car.y;
               triggerTransition();
               showToast("🚗 Drove out of garage");
-              return;
             }
             // For other doors, just block the car
             car.speed *= -0.5;
