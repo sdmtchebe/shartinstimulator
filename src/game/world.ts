@@ -223,7 +223,7 @@ export const CALL_SCRIPTS: Record<string, { greeting: string; exchanges: [string
 
 export const NPC_DEFS: NpcDef[] = [
   {
-    id: "charle", name: "Charle", homeScene: "court", baseX: 460, baseY: 300,
+    id: "charle", name: "Charle", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#e89060", hairColor: "#d24a18", size: 22,
     description: "A fat little ginger guy. He loves basketball.",
     transformForm: "basketball", transformLabel: "rendre charle une balle de basket",
@@ -232,9 +232,15 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🏀", "😅", "🥺"],
     defaultMood: "happy",
     specialAction: { label: "Challenge to HORSE ($10 bet)", emoji: "🏀" },
+    schedule: [
+      { startHour: 10, endHour: 14, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
+      { startHour: 14, endHour: 16, scene: "outside", activity: "wander", targetX: 1500, targetY: 530 },
+      { startHour: 16, endHour: 18.83, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
-    id: "damian", name: "Damian", homeScene: "outside", baseX: 1100, baseY: 760,
+    id: "damian", name: "Damian", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#f0c8a0", hairColor: "#5a3520", size: 18,
     description: "Martin's deaf and mute little chud brother. Plays soccer all day.",
     transformForm: "vegetable-wheelchair", transformLabel: "make Damian a wheelchair vegetable",
@@ -243,10 +249,14 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["⚽", "👀", "..."],
     defaultMood: "neutral",
     specialAction: { label: "Steal his soccer ball (+$5, he cries)", emoji: "⚽" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
-    id: "wolf-npc", name: "Wolf Shartos Bartos Bobitos", homeScene: "outside",
-    baseX: 1650, baseY: 1300, color: "#3a5a3a", hairColor: "#1a2a1a", size: 24,
+    id: "wolf-npc", name: "Wolf Shartos Bartos Bobitos", homeScene: "apartments",
+    baseX: 500, baseY: 580, color: "#3a5a3a", hairColor: "#1a2a1a", size: 24,
     description: "Always dribbling an invisible soccer ball.",
     transformForm: "cartier-watch", transformLabel: "transform Wolf into a Cartier Santos",
     behavior: "wander",
@@ -254,9 +264,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["⌚", "⚽", "😤"],
     defaultMood: "smug",
     specialAction: { label: "Ask to see the watch (wastes 15 min)", emoji: "⌚" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1650, targetY: 1300 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
-    id: "konstantin", name: "Konstantin", homeScene: "outside", baseX: 1250, baseY: 1300,
+    id: "konstantin", name: "Konstantin", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#c8b890", hairColor: "#2a1810", size: 22,
     description: "Smells like rakia. Always shouts about Bulgaria.",
     transformForm: "bulgarian-flag", transformLabel: "make Konstantin into a Bulgarian flag",
@@ -265,9 +279,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🇧🇬", "🍻", "😡"],
     defaultMood: "angry",
     specialAction: { label: "Drink rakia with him (-15 hunger, +8 chud)", emoji: "🍻" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1250, targetY: 1300 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
-    id: "kai", name: "Kai", homeScene: "outside", baseX: 2200, baseY: 900,
+    id: "kai", name: "Kai", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#d8c0a0", hairColor: "#3a2010", size: 22,
     description: "Once ate an entire candle on a dare.",
     transformForm: "bulgarian-flag", transformLabel: "make Kai into a Bulgarian flag",
@@ -276,9 +294,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🕯️", "🤤"],
     defaultMood: "shocked",
     specialAction: { label: "Dare him to eat something horrible (+10 chud each)", emoji: "🕯️" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 2200, targetY: 900 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
-    id: "david", name: "David", homeScene: "outside", baseX: 800, baseY: 750,
+    id: "david", name: "David", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#e8c8a0", hairColor: "#2a1810", size: 22,
     description: "Carries hummus everywhere.",
     transformForm: "israeli-flag", transformLabel: "make David into an Israeli flag",
@@ -287,9 +309,13 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🇮🇱", "🥙", "😅"],
     defaultMood: "happy",
     specialAction: { label: "Accept hummus (-20 hunger, -3 chud)", emoji: "🥙" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 800, targetY: 750 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
-    id: "anish", name: "Anish", homeScene: "outside", baseX: 2050, baseY: 1300,
+    id: "anish", name: "Anish", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#a06840", hairColor: "#1a0a05", size: 22,
     description: "Permanent cringe energy.",
     transformForm: "trash-can", transformLabel: "transform Anish into a trash can",
@@ -298,6 +324,10 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🤡", "🗑️", "😬"],
     defaultMood: "smug",
     specialAction: { label: "Watch his stand-up (+15 chud, pure suffering)", emoji: "🎤" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 2050, targetY: 1300 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
     id: "moggayla", name: "Moggayla", homeScene: "moggayla", baseX: 500, baseY: 380,
@@ -314,8 +344,8 @@ export const NPC_DEFS: NpcDef[] = [
     ],
   },
   {
-    id: "caillo", name: "Caillo Qui Casse les Couilles", homeScene: "outside",
-    baseX: 1070, baseY: 480, color: "#f4d7b8", hairColor: "#5a3520", size: 20,
+    id: "caillo", name: "Caillo Qui Casse les Couilles", homeScene: "apartments",
+    baseX: 500, baseY: 580, color: "#f4d7b8", hairColor: "#5a3520", size: 20,
     description: "The most annoying student ever. Pays for tutorat.",
     transformForm: "rock", transformLabel: "turn Caillo into a literal rock",
     behavior: "wander",
@@ -323,6 +353,10 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🤔", "🧱", "📚"],
     defaultMood: "scared",
     specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
+    schedule: [
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1070, targetY: 480 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
     id: "cousin-roy", name: "Cousin", homeScene: "basement", baseX: 400, baseY: 280,
@@ -368,7 +402,7 @@ export const NPC_DEFS: NpcDef[] = [
     ],
   },
   {
-    id: "carl", name: "Carl the Fisherman", homeScene: "fishing", baseX: 200, baseY: 280,
+    id: "carl", name: "Carl the Fisherman", homeScene: "apartments", baseX: 500, baseY: 580,
     color: "#c8a878", hairColor: "#a0a0a0", size: 24,
     description: "An old fisherman. Smells like fish and sadness.",
     transformForm: "rock", transformLabel: "turn Carl into a fish",
@@ -377,6 +411,12 @@ export const NPC_DEFS: NpcDef[] = [
     reactionEmojis: ["🎣", "🐟", "😶"],
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
+    schedule: [
+      { startHour: 10, endHour: 14, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
+      { startHour: 14, endHour: 16, scene: "outside", activity: "wander", targetX: 850, targetY: 1920 },
+      { startHour: 16, endHour: 18.83, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
+      { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
+    ],
   },
   {
     id: "moggayla-bt", name: "MoGgayla", homeScene: "boutique", baseX: 450, baseY: 320,
