@@ -247,7 +247,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "neutral",
     specialAction: { label: "Steal his soccer ball (+$5, he cries)", emoji: "⚽" },
     schedule: [
-      { startHour: 10, endHour: 18.5, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
+      { startHour: 10, endHour: 18.5, scene: "outside", activity: "soccer", targetX: 1300, targetY: 660 },
     ],
   },
   {
