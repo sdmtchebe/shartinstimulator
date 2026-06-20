@@ -2030,60 +2030,43 @@ export default function MartinGame() {
           }
         }
 
-        // Activity changes (chat with other NPCs)
-        if (n.activity === "chat") {
-          if (n.activityTimer <= 0) {
-            n.activity = "wander";
-            n.partnerId = null;
-            n.thoughtTimer = 1500 + Math.random() * 2000;
-          }
-        } else if (n.activity === "wander" || n.activity === "chat") {
-          if (Math.random() < 0.003 && !n.def.isDeaf) {
-            for (const other of npcs) {
-              if (other === n || other.scene !== n.scene || other.transformed) continue;
-              if (other.def.staticSpot || other.def.isDeaf) continue;
-              if (other.activity !== "wander" && other.activity !== "chat") continue;
-              if (dist(n.x, n.y, other.x, other.y) < 80) {
-                n.activity = "chat"; other.activity = "chat";
-                n.partnerId = other.def.id; other.partnerId = n.def.id;
-                const dur = 4000 + Math.random() * 2000;
-                n.activityTimer = dur; other.activityTimer = dur;
-                n.speechBubble = randomChoice(n.def.chatLines || ["..."]); n.speechTimer = 2500;
-                other.speechBubble = randomChoice(other.def.chatLines || ["..."]); other.speechTimer = 2500;
-                break;
-              }
+        // Separation: push NPCs apart if too close
+        if (n.activity !== "chat") {
+          for (const other of npcs) {
+            if (other === n || other.scene !== n.scene || other.transformed || n.transformed) continue;
+            const sepDist = dist(n.x, n.y, other.x, other.y);
+            if (sepDist < 50 && sepDist > 0) {
+              const pushStrength = (50 - sepDist) * 0.08;
+              const pushX = (n.x - other.x) / sepDist;
+              const pushY = (n.y - other.y) / sepDist;
+              n.x += pushX * pushStrength * (dt / 16);
+              n.y += pushY * pushStrength * (dt / 16);
             }
           }
         }
 
-        // Wander targets
+        // Wander targets — walk to interest points with purpose
         if (n.activity === "wander" || n.activity === "guard" || n.activity === "dance" || n.activity === "eat") {
           n.thoughtTimer -= dt;
-          if (n.thoughtTimer <= 0) {
-            n.thoughtTimer = 1500 + Math.random() * 3000;
-            const range = Math.random() > 0.85 ? 250 : 90;
-            let tx = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
-            let ty = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
-            // Avoid buildings in outside scene
-            if (n.scene === "outside") {
+          const distToTarget = dist(n.x, n.y, n.targetX, n.targetY);
+          if (n.thoughtTimer <= 0 || distToTarget < 10) {
+            n.thoughtTimer = 3000 + Math.random() * 4000;
+            const interests = SCENE_INTERESTS[n.scene] ?? [];
+            if (interests.length > 0) {
+              let pt = interests[Math.floor(Math.random() * interests.length)];
               let attempts = 0;
-              while (attempts < 5) {
-                let insideBuilding = false;
-                for (const b of SCENES.outside.buildings) {
-                  if (tx > b.x && tx < b.x + b.w && ty > b.y && ty < b.y + b.h) {
-                    insideBuilding = true;
-                    break;
-                  }
-                }
-                if (!insideBuilding) break;
-                tx = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
-                ty = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
+              while (attempts < 8 && npcs.some(o => o !== n && o.scene === n.scene && !o.transformed && dist(o.x, o.y, pt.x, pt.y) < 45)) {
+                pt = interests[Math.floor(Math.random() * interests.length)];
                 attempts++;
               }
+              n.targetX = clamp(pt.x + randomInt(-15, 15), 60, SCENES[n.scene].width - 60);
+              n.targetY = clamp(pt.y + randomInt(-15, 15), 60, SCENES[n.scene].height - 60);
+            } else {
+              const range = 150;
+              n.targetX = clamp(targetX + randomInt(-range, range), 60, SCENES[n.scene].width - 60);
+              n.targetY = clamp(targetY + randomInt(-range, range), 60, SCENES[n.scene].height - 60);
             }
-            n.targetX = tx;
-            n.targetY = ty;
-            if (n.def.chatLines && Math.random() < 0.15) {
+            if (n.def.chatLines && Math.random() < 0.1) {
               n.speechBubble = randomChoice(n.def.chatLines); n.speechTimer = 2200;
             }
           }
@@ -2134,7 +2117,7 @@ export default function MartinGame() {
         const dx = n.targetX - n.x;
         const dy = n.targetY - n.y;
         const d2 = Math.hypot(dx, dy);
-        if (d2 > 2 && n.activity !== "chat") {
+        if (d2 > 2) {
           const sp = n.speed * (dt / 16);
           n.x += (dx / d2) * sp; n.y += (dy / d2) * sp;
           n.walkPhase += dt / 130;
@@ -2146,14 +2129,6 @@ export default function MartinGame() {
             n.y -= (dy / d2) * sp * 2;
             n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
             n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
-          }
-        } else if (n.activity === "chat" && n.partnerId) {
-          // Face partner
-          const p = npcs.find((x) => x.def.id === n.partnerId);
-          if (p) {
-            const fdx = p.x - n.x, fdy = p.y - n.y;
-            if (Math.abs(fdx) > Math.abs(fdy)) n.facingDir = fdx > 0 ? "right" : "left";
-            else n.facingDir = fdy > 0 ? "down" : "up";
           }
         }
       }

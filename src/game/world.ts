@@ -233,9 +233,12 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Challenge to HORSE ($10 bet)", emoji: "🏀" },
     schedule: [
-      { startHour: 8, endHour: 17, scene: "tutorat", activity: "guard", targetX: 450, targetY: 400 },
-      { startHour: 17, endHour: 19, scene: "fightclub", activity: "wander" },
-      { startHour: 19, endHour: 8, scene: "tutorat", activity: "static" },
+      { startHour: 8, endHour: 11, scene: "tutorat", activity: "guard", targetX: 450, targetY: 400 },
+      { startHour: 11, endHour: 13, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
+      { startHour: 13, endHour: 15, scene: "fightclub", activity: "wander" },
+      { startHour: 15, endHour: 17, scene: "outside", activity: "wander" },
+      { startHour: 17, endHour: 19, scene: "chudzone", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -249,11 +252,13 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "neutral",
     specialAction: { label: "Steal his soccer ball (+$5, he cries)", emoji: "⚽" },
     schedule: [
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 100, targetY: 250 },
       { startHour: 10, endHour: 12, scene: "outside", activity: "soccer", targetX: 1100, targetY: 760 },
-      { startHour: 12, endHour: 15, scene: "gym", activity: "wander" },
-      { startHour: 15, endHour: 17, scene: "tutorat", activity: "wander" },
-      { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 12, endHour: 14, scene: "gym", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "tutorat", activity: "wander" },
+      { startHour: 16, endHour: 18, scene: "court", activity: "wander" },
+      { startHour: 18, endHour: 19, scene: "outside", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -267,11 +272,13 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "smug",
     specialAction: { label: "Ask to see the watch (wastes 15 min)", emoji: "⌚" },
     schedule: [
-      { startHour: 10, endHour: 14, scene: "outside", activity: "wander" },
-      { startHour: 14, endHour: 16, scene: "cartier", activity: "wander" },
-      { startHour: 16, endHour: 18, scene: "gym", activity: "wander" },
-      { startHour: 18, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 100, targetY: 350 },
+      { startHour: 10, endHour: 12, scene: "outside", activity: "wander" },
+      { startHour: 12, endHour: 14, scene: "cartier", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "gym", activity: "wander" },
+      { startHour: 16, endHour: 17, scene: "fightclub", activity: "wander" },
+      { startHour: 17, endHour: 19, scene: "nelly", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -285,10 +292,13 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "angry",
     specialAction: { label: "Drink rakia with him (-15 hunger, +8 chud)", emoji: "🍻" },
     schedule: [
-      { startHour: 11, endHour: 14, scene: "nelly", activity: "wander" },
-      { startHour: 14, endHour: 16, scene: "outside", activity: "wander" },
-      { startHour: 16, endHour: 19, scene: "nelly", activity: "wander" },
-      { startHour: 19, endHour: 11, scene: "apartments", activity: "static" },
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 700, targetY: 450 },
+      { startHour: 10, endHour: 12, scene: "outside", activity: "wander" },
+      { startHour: 12, endHour: 14, scene: "nelly", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "chudzone", activity: "wander" },
+      { startHour: 16, endHour: 18, scene: "nelly", activity: "wander" },
+      { startHour: 18, endHour: 19, scene: "asbestos", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -302,11 +312,14 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "shocked",
     specialAction: { label: "Dare him to eat something horrible (+10 chud each)", emoji: "🕯️" },
     schedule: [
-      { startHour: 10, endHour: 13, scene: "outside", activity: "eat" },
-      { startHour: 13, endHour: 15, scene: "chudzone", activity: "wander" },
-      { startHour: 15, endHour: 18, scene: "outside", activity: "wander" },
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 700, targetY: 350 },
+      { startHour: 10, endHour: 12, scene: "outside", activity: "eat" },
+      { startHour: 12, endHour: 14, scene: "chudzone", activity: "wander" },
+      { startHour: 14, endHour: 15, scene: "asbestos", activity: "wander" },
+      { startHour: 15, endHour: 17, scene: "outside", activity: "wander" },
+      { startHour: 17, endHour: 18, scene: "fightclub", activity: "wander" },
       { startHour: 18, endHour: 19, scene: "outside", activity: "eat" },
-      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -320,10 +333,13 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Accept hummus (-20 hunger, -3 chud)", emoji: "🥙" },
     schedule: [
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 100, targetY: 450 },
       { startHour: 10, endHour: 12, scene: "outside", activity: "wander" },
       { startHour: 12, endHour: 14, scene: "gym", activity: "wander" },
-      { startHour: 14, endHour: 19, scene: "outside", activity: "watchTV" },
-      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 14, endHour: 16, scene: "tutorat", activity: "wander" },
+      { startHour: 16, endHour: 18, scene: "outside", activity: "watchTV" },
+      { startHour: 18, endHour: 19, scene: "nelly", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -337,9 +353,12 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "smug",
     specialAction: { label: "Watch his stand-up (+15 chud, pure suffering)", emoji: "🎤" },
     schedule: [
-      { startHour: 10, endHour: 17, scene: "asbestos", activity: "wander" },
-      { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 750, targetY: 450 },
+      { startHour: 10, endHour: 13, scene: "asbestos", activity: "wander" },
+      { startHour: 13, endHour: 15, scene: "chudzone", activity: "wander" },
+      { startHour: 15, endHour: 17, scene: "outside", activity: "wander" },
+      { startHour: 17, endHour: 19, scene: "nelly", activity: "wander" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -367,10 +386,13 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "scared",
     specialAction: { label: "Give extra homework (+$10, he weeps)", emoji: "📚" },
     schedule: [
-      { startHour: 10, endHour: 15, scene: "tutorat", activity: "wander" },
-      { startHour: 15, endHour: 17, scene: "outside", activity: "wander" },
+      { startHour: 8, endHour: 10, scene: "apartments", activity: "wander", targetX: 700, targetY: 250 },
+      { startHour: 10, endHour: 12, scene: "tutorat", activity: "wander" },
+      { startHour: 12, endHour: 14, scene: "outside", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "chudzone", activity: "wander" },
+      { startHour: 16, endHour: 17, scene: "gym", activity: "wander" },
       { startHour: 17, endHour: 19, scene: "outside", activity: "wander" },
-      { startHour: 19, endHour: 10, scene: "apartments", activity: "static" },
+      { startHour: 19, endHour: 8, scene: "apartments", activity: "static" },
     ],
   },
   {
@@ -427,9 +449,12 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
     schedule: [
-      { startHour: 8, endHour: 18, scene: "fishing", activity: "wander" },
+      { startHour: 6, endHour: 12, scene: "fishing", activity: "wander" },
+      { startHour: 12, endHour: 14, scene: "nelly", activity: "wander" },
+      { startHour: 14, endHour: 16, scene: "fishing", activity: "wander" },
+      { startHour: 16, endHour: 18, scene: "outside", activity: "wander" },
       { startHour: 18, endHour: 19, scene: "nelly", activity: "wander" },
-      { startHour: 19, endHour: 8, scene: "fishing", activity: "static" },
+      { startHour: 19, endHour: 6, scene: "fishing", activity: "static" },
     ],
   },
   {
@@ -463,6 +488,82 @@ export const NPC_DEFS: NpcDef[] = [
 const COLORS = {
   doorway: "#f4b860",
   building: "#7a5a40",
+};
+
+export const SCENE_INTERESTS: Record<string, { x: number; y: number }[]> = {
+  home: [
+    { x: 120, y: 130 }, { x: 180, y: 420 }, { x: 750, y: 120 },
+    { x: 760, y: 370 }, { x: 460, y: 620 }, { x: 500, y: 200 },
+  ],
+  outside: [
+    { x: 430, y: 500 }, { x: 1070, y: 480 }, { x: 1550, y: 530 },
+    { x: 2060, y: 530 }, { x: 2530, y: 530 }, { x: 450, y: 1300 },
+    { x: 850, y: 1300 }, { x: 1250, y: 1300 }, { x: 1650, y: 1300 },
+    { x: 2050, y: 1300 }, { x: 450, y: 1900 }, { x: 850, y: 1900 },
+    { x: 2050, y: 1900 }, { x: 200, y: 270 }, { x: 720, y: 270 },
+    { x: 800, y: 750 }, { x: 1400, y: 850 }, { x: 1850, y: 800 },
+    { x: 2200, y: 900 }, { x: 1100, y: 950 },
+  ],
+  tutorat: [
+    { x: 420, y: 300 }, { x: 140, y: 250 }, { x: 740, y: 250 }, { x: 140, y: 500 },
+  ],
+  court: [
+    { x: 460, y: 100 }, { x: 140, y: 250 }, { x: 740, y: 250 }, { x: 460, y: 500 },
+  ],
+  fightclub: [
+    { x: 420, y: 260 }, { x: 140, y: 140 }, { x: 740, y: 140 }, { x: 420, y: 500 },
+  ],
+  chudzone: [
+    { x: 420, y: 240 }, { x: 140, y: 140 }, { x: 740, y: 140 }, { x: 740, y: 440 },
+  ],
+  moggayla: [
+    { x: 320, y: 500 }, { x: 120, y: 120 }, { x: 740, y: 120 }, { x: 420, y: 350 },
+  ],
+  cartier: [
+    { x: 240, y: 140 }, { x: 640, y: 140 }, { x: 440, y: 360 }, { x: 140, y: 500 },
+  ],
+  nelly: [
+    { x: 240, y: 140 }, { x: 640, y: 140 }, { x: 440, y: 360 }, { x: 140, y: 500 },
+  ],
+  gym: [
+    { x: 240, y: 140 }, { x: 640, y: 140 }, { x: 440, y: 360 }, { x: 140, y: 320 },
+  ],
+  asbestos: [
+    { x: 240, y: 160 }, { x: 640, y: 140 }, { x: 440, y: 360 }, { x: 140, y: 320 },
+  ],
+  fishing: [
+    { x: 420, y: 240 }, { x: 140, y: 140 }, { x: 740, y: 140 }, { x: 420, y: 500 },
+  ],
+  stripclub: [
+    { x: 140, y: 140 }, { x: 740, y: 200 }, { x: 160, y: 420 }, { x: 420, y: 350 },
+  ],
+  boutique: [
+    { x: 740, y: 120 }, { x: 160, y: 240 }, { x: 160, y: 440 }, { x: 420, y: 350 },
+  ],
+  basement: [
+    { x: 420, y: 300 }, { x: 140, y: 140 }, { x: 640, y: 140 }, { x: 640, y: 440 },
+  ],
+  upstairs: [
+    { x: 400, y: 120 }, { x: 300, y: 250 }, { x: 640, y: 140 }, { x: 400, y: 400 },
+  ],
+  tunnel: [
+    { x: 240, y: 120 }, { x: 440, y: 320 }, { x: 620, y: 120 }, { x: 340, y: 200 },
+  ],
+  "hidden-room": [
+    { x: 120, y: 120 }, { x: 460, y: 120 }, { x: 290, y: 140 }, { x: 120, y: 360 },
+  ],
+  airport: [
+    { x: 500, y: 220 }, { x: 140, y: 80 }, { x: 740, y: 560 }, { x: 500, y: 400 },
+  ],
+  apartments: [
+    { x: 490, y: 140 }, { x: 440, y: 560 }, { x: 140, y: 560 },
+    { x: 140, y: 280 }, { x: 140, y: 380 }, { x: 140, y: 480 },
+    { x: 740, y: 280 }, { x: 740, y: 380 }, { x: 740, y: 480 },
+  ],
+  hell: [
+    { x: 340, y: 340 }, { x: 1640, y: 440 }, { x: 940, y: 140 },
+    { x: 190, y: 840 }, { x: 1000, y: 500 },
+  ],
 };
 
 const stdWalls = (w: number, h: number) => [
