@@ -54,7 +54,6 @@ function makeNpcs(): NpcRuntime[] {
     ballVX: 0, ballVY: 0,
     anger: 0, hp: 50,
     asleep: false, stalking: false, pickpocketCd: 0,
-    enteringBuilding: false, buildingTimer: 0, buildingExitX: 0, buildingExitY: 0,
     goingHome: false,
   }));
 }
@@ -1962,98 +1961,28 @@ export default function MartinGame() {
           continue;
         }
 
-        // Building enter/exit behavior
-        if (n.enteringBuilding) {
-          n.buildingTimer -= dt;
-          if (n.buildingTimer <= 0) {
-            n.enteringBuilding = false;
-            n.scene = "outside";
-            n.x = n.buildingExitX;
-            n.y = n.buildingExitY;
-            n.targetX = n.buildingExitX + randomInt(-80, 80);
-            n.targetY = n.buildingExitY + randomInt(-80, 80);
-            n.targetX = clamp(n.targetX, 60, SCENES.outside.width - 60);
-            n.targetY = clamp(n.targetY, 60, SCENES.outside.height - 60);
-            continue;
-          }
+        // End of day — teleport to apartments at 6:30 PM
+        if (n.scene === "outside" && currentHour >= 18.5 && !n.goingHome) {
+          n.goingHome = true;
+          n.scene = "apartments";
+          n.x = 500; n.y = 580;
+          n.targetX = 500; n.targetY = 580;
+          continue;
         }
-        // If stuck in a building (not apartments) and it's late, force exit
-        if (n.scene !== "outside" && n.scene !== "apartments" && currentHour >= 18.5 && !n.enteringBuilding) {
+        // Wake up at 10 AM — teleport outside
+        if (n.scene === "apartments" && currentHour >= 10 && currentHour < 18.5) {
+          n.goingHome = false;
           n.scene = "outside";
           const aDoor = SCENES.outside.doors.find(d => d.targetScene === "apartments");
-          n.x = aDoor ? aDoor.x + aDoor.w / 2 : 1260;
-          n.y = aDoor ? aDoor.y + aDoor.h / 2 + 40 : 1935;
-          n.targetX = n.x; n.targetY = n.y;
-        }
-        // Go home at end of day — walk to apartments door then enter
-        const aptDoor = SCENES.outside.doors.find(d => d.targetScene === "apartments");
-        const aptDoorX = aptDoor ? aptDoor.x + aptDoor.w / 2 : 1260;
-        const aptDoorY = aptDoor ? aptDoor.y + aptDoor.h / 2 : 1895;
-        if (!n.enteringBuilding && n.scene === "outside" && currentHour >= 18.5 && !n.goingHome) {
-          n.goingHome = true;
-          n.targetX = aptDoorX;
-          n.targetY = aptDoorY + 30;
-        }
-        if (n.goingHome && n.scene === "outside") {
-          if (dist(n.x, n.y, aptDoorX, aptDoorY) < 40) {
-            n.goingHome = false;
-            n.enteringBuilding = true;
-            n.buildingTimer = 8000 + Math.random() * 4000;
-            n.buildingExitX = aptDoorX;
-            n.buildingExitY = aptDoorY + 40;
-            n.scene = "apartments";
-            const spawn = SCENES.apartments.spawnPos;
-            n.x = spawn.x; n.y = spawn.y;
-            const interests = SCENE_INTERESTS["apartments"] ?? [];
-            if (interests.length > 0) {
-              const pt = interests[Math.floor(Math.random() * interests.length)];
-              n.targetX = clamp(pt.x + randomInt(-15, 15), 60, SCENES.apartments.width - 60);
-              n.targetY = clamp(pt.y + randomInt(-15, 15), 60, SCENES.apartments.height - 60);
-            } else {
-              n.targetX = spawn.x; n.targetY = spawn.y;
-            }
-            continue;
-          }
-          n.targetX = aptDoorX;
-          n.targetY = aptDoorY + 30;
-        }
-        // Wake up at 10 AM — exit apartments
-        if (n.scene === "apartments" && !n.enteringBuilding && currentHour >= 10 && currentHour < 18.5) {
-          n.scene = "outside";
-          n.x = aptDoorX + randomInt(-20, 20);
-          n.y = aptDoorY + 50;
-          n.targetX = aptDoorX + randomInt(-80, 80);
-          n.targetY = aptDoorY + randomInt(-40, 80);
+          const spawnX = aDoor ? aDoor.x + aDoor.w / 2 : 1260;
+          const spawnY = aDoor ? aDoor.y + aDoor.h / 2 + 50 : 1935;
+          n.x = spawnX + randomInt(-30, 30);
+          n.y = spawnY + randomInt(-10, 30);
+          n.targetX = n.x + randomInt(-80, 80);
+          n.targetY = n.y + randomInt(-40, 80);
           n.targetX = clamp(n.targetX, 60, SCENES.outside.width - 60);
           n.targetY = clamp(n.targetY, 60, SCENES.outside.height - 60);
           continue;
-        }
-        // Random building entry during the day
-        if (!n.goingHome && n.scene === "outside" && Math.random() < 0.0003 * dt) {
-          const doors = SCENES.outside.doors;
-          for (const d of doors) {
-            if (d.targetScene === "apartments" || d.targetScene === "home") continue;
-            if (dist(n.x, n.y, d.x + d.w / 2, d.y + d.h / 2) < 60) {
-              n.enteringBuilding = true;
-              n.buildingTimer = 3000 + Math.random() * 4000;
-              n.buildingExitX = d.x + d.w / 2;
-              n.buildingExitY = d.y + d.h / 2 + 40;
-              n.scene = d.targetScene as SceneId;
-              const spawn = SCENES[d.targetScene]?.spawnPos ?? { x: 400, y: 580 };
-              n.x = spawn.x; n.y = spawn.y;
-              const interests = SCENE_INTERESTS[d.targetScene] ?? [];
-              if (interests.length > 0) {
-                const pt = interests[Math.floor(Math.random() * interests.length)];
-                n.targetX = clamp(pt.x + randomInt(-15, 15), 60, (SCENES[d.targetScene]?.width ?? 800) - 60);
-                n.targetY = clamp(pt.y + randomInt(-15, 15), 60, (SCENES[d.targetScene]?.height ?? 600) - 60);
-              } else {
-                n.targetX = clamp(spawn.x + randomInt(-120, 120), 60, (SCENES[d.targetScene]?.width ?? 800) - 60);
-                n.targetY = clamp(spawn.y + randomInt(-120, 120), 60, (SCENES[d.targetScene]?.height ?? 600) - 60);
-              }
-              break;
-            }
-          }
-          if (n.enteringBuilding) continue;
         }
 
         // Soccer behavior

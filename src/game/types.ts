@@ -145,10 +145,6 @@ export interface NpcRuntime {
   asleep?: boolean;
   stalking?: boolean;
   pickpocketCd?: number;
-  enteringBuilding: boolean;
-  buildingTimer: number;
-  buildingExitX: number;
-  buildingExitY: number;
   goingHome: boolean;
 }
 
