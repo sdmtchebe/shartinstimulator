@@ -7,7 +7,7 @@ import HUD from "./HUD";
 import DialogPanel from "./DialogPanel";
 import PhoneMenu from "./PhoneMenu";
 
-interface KeyState { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean; phone: boolean; mute: boolean; gear1: boolean; gear2: boolean; gear3: boolean; gear4: boolean; reverse: boolean; headlights: boolean; neutral: boolean; }
+interface KeyState { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean; phone: boolean; mute: boolean; gear1: boolean; gear2: boolean; gear3: boolean; gear4: boolean; reverse: boolean; headlights: boolean; neutral: boolean; garageDoor: boolean; }
 
 interface ShadowChud {
   x: number; y: number;
@@ -40,6 +40,7 @@ const KEY_MAP: Record<string, keyof KeyState> = {
   r: "reverse", R: "reverse",
   h: "headlights", H: "headlights",
   n: "neutral", N: "neutral",
+  g: "garageDoor", G: "garageDoor",
 };
 
 function makeNpcs(): NpcRuntime[] {
@@ -128,10 +129,11 @@ export default function MartinGame() {
   const martinRef = useRef<MartinState>(savedData?.martin ?? { scene: "home", x: 420, y: 580, dir: "down", walking: false, walkPhase: 0, hp: 100, hpMax: 100 });
   const statsRef = useRef<GameStats>(savedData?.stats ?? initialStats());
   const npcsRef = useRef<NpcRuntime[]>(savedData?.npcs ?? makeNpcs());
-  const keysRef = useRef<KeyState>({ up: false, down: false, left: false, right: false, interact: false, phone: false, mute: false, gear1: false, gear2: false, gear3: false, gear4: false, reverse: false, headlights: false, neutral: false });
+  const keysRef = useRef<KeyState>({ up: false, down: false, left: false, right: false, interact: false, phone: false, mute: false, gear1: false, gear2: false, gear3: false, gear4: false, reverse: false, headlights: false, neutral: false, garageDoor: false });
   const lastInteractRef = useRef(0);
   const lastPhoneRef = useRef(0);
   const lastMuteRef = useRef(0);
+  const lastGarageRef = useRef(0);
   const cameraRef = useRef({ x: 0, y: 0 });
   const eatTimerRef = useRef(0);
   const cousinChompCdRef = useRef(0);
@@ -1358,17 +1360,6 @@ export default function MartinGame() {
       return;
     }
 
-    // Garage door open/close
-    if (m.scene === "outside") {
-      const garDoor = SCENES.outside.doors.find(d => d.id === "d-garage");
-      if (garDoor && m.x > garDoor.x - 40 && m.x < garDoor.x + garDoor.w + 40 && m.y > garDoor.y - 40 && m.y < garDoor.y + garDoor.h + 40) {
-        garageDoorOpen.current = !garageDoorOpen.current;
-        sound.play("door");
-        showToast(garageDoorOpen.current ? "🚪 Garage door OPENED" : "🚪 Garage door CLOSED");
-        return;
-      }
-    }
-
     // Gas station interaction
     // Gas station — only refill when near the pump
     if (m.scene === "gas-station") {
@@ -1585,7 +1576,7 @@ export default function MartinGame() {
 
   // Interact key edge / phone toggle / mute toggle
   useEffect(() => {
-    let prevI = false, prevP = false, prevM = false;
+    let prevI = false, prevP = false, prevM = false, prevG = false;
     let rafId = 0;
     const tick = () => {
       const k = keysRef.current;
@@ -1624,7 +1615,21 @@ export default function MartinGame() {
           const m = sound.toggleMute(); setMuted(m);
         }
       }
-      prevI = k.interact; prevP = k.phone; prevM = k.mute;
+      if (k.garageDoor && !prevG && !showStart) {
+        if (now - lastGarageRef.current > 250) {
+          lastGarageRef.current = now;
+          const m = martinRef.current;
+          if (m.scene === "outside") {
+            const garDoor = SCENES.outside.doors.find(d => d.id === "d-garage");
+            if (garDoor && m.x > garDoor.x - 60 && m.x < garDoor.x + garDoor.w + 60 && m.y > garDoor.y - 60 && m.y < garDoor.y + garDoor.h + 60) {
+              garageDoorOpen.current = !garageDoorOpen.current;
+              sound.play("door");
+              showToast(garageDoorOpen.current ? "🚪 Garage door OPENED" : "🚪 Garage door CLOSED");
+            }
+          }
+        }
+      }
+      prevI = k.interact; prevP = k.phone; prevM = k.mute; prevG = k.garageDoor;
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
@@ -2804,7 +2809,7 @@ function render(
       ctx.fillStyle = "#fff"; ctx.font = "7px 'Press Start 2P', monospace"; ctx.textAlign = "center";
       ctx.fillText("CLOSED", d.x + d.w / 2, d.y + d.h / 2 + 3);
       ctx.fillStyle = "#fff"; ctx.font = "9px 'Press Start 2P', monospace";
-      ctx.fillText("Garage [E] to open", d.x + d.w / 2, d.y - 6);
+      ctx.fillText("Garage [G] to open", d.x + d.w / 2, d.y - 6);
     } else {
       ctx.fillStyle = d.color ?? "#f4b860"; ctx.fillRect(d.x, d.y, d.w, d.h);
       ctx.strokeStyle = "rgba(0,0,0,0.5)"; ctx.lineWidth = 2; ctx.strokeRect(d.x, d.y, d.w, d.h);

@@ -103,7 +103,7 @@ export default function HUD(props: HUDProps) {
       </div>
 
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 border border-border rounded px-4 py-2 pixel-text text-[8px] md:text-[9px] text-muted-foreground text-center">
-        WASD/ARROWS move • E/SPACE interact • P phone • M mute
+        WASD/ARROWS move • E/SPACE interact • G garage door • P phone • M mute
       </div>
     </div>
   );

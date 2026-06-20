@@ -563,7 +563,7 @@ export const SCENES: Record<string, SceneDef> = {
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
-      { id: "d-garage", x: 530, y: 470, w: 70, h: 30, targetScene: "garage", targetPos: { x: 400, y: 500 }, label: "Garage", color: "#8a7a5a" },
+      { id: "d-garage", x: 530, y: 470, w: 70, h: 30, targetScene: "garage", targetPos: { x: 400, y: 500 }, label: "Garage [G]", color: "#8a7a5a" },
       { id: "d-tutorat", x: 1040, y: 460, w: 60, h: 30, targetScene: "tutorat", targetPos: { x: 400, y: 580 }, label: "Tutorat", color: COLORS.doorway },
       { id: "d-court", x: 1540, y: 510, w: 60, h: 30, targetScene: "court", targetPos: { x: 400, y: 600 }, label: "Court", color: COLORS.doorway },
       { id: "d-fight", x: 2050, y: 510, w: 60, h: 30, targetScene: "fightclub", targetPos: { x: 400, y: 580 }, label: "Fight Club", color: COLORS.doorway },
