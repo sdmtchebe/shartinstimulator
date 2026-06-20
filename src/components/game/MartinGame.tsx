@@ -1996,6 +1996,21 @@ export default function MartinGame() {
           if (n.ballX > sceneW - 50) { n.ballX = sceneW - 50; n.ballVX = -Math.abs(n.ballVX); }
           if (n.ballY < 50) { n.ballY = 50; n.ballVY = Math.abs(n.ballVY); }
           if (n.ballY > sceneH - 50) { n.ballY = sceneH - 50; n.ballVY = -Math.abs(n.ballVY); }
+          // Ball bounces off buildings/walls
+          for (const w of SCENES[n.scene].walls) {
+            if (w.w <= 30 && w.h <= 30) continue;
+            if (n.ballX > w.x && n.ballX < w.x + w.w && n.ballY > w.y && n.ballY < w.y + w.h) {
+              const cx = w.x + w.w / 2;
+              const cy = w.y + w.h / 2;
+              if (Math.abs(n.ballX - cx) / w.w > Math.abs(n.ballY - cy) / w.h) {
+                n.ballVX = -n.ballVX;
+                n.ballX = n.ballX < cx ? w.x - 12 : w.x + w.w + 12;
+              } else {
+                n.ballVY = -n.ballVY;
+                n.ballY = n.ballY < cy ? w.y - 12 : w.y + w.h + 12;
+              }
+            }
+          }
           const ballSpeed = Math.hypot(n.ballVX, n.ballVY);
           const dToBall = dist(n.x, n.y, n.ballX, n.ballY);
           if (ballSpeed < 0.3 && dToBall < 30) {
@@ -2160,8 +2175,15 @@ export default function MartinGame() {
           if (collides(n.x, n.y, n.scene)) {
             n.x -= (dx / d2) * sp * 2;
             n.y -= (dy / d2) * sp * 2;
-            n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
-            n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
+            const fallback = SCENE_INTERESTS[n.scene] ?? [];
+            if (fallback.length > 0) {
+              const pt = fallback[Math.floor(Math.random() * fallback.length)];
+              n.targetX = pt.x + randomInt(-20, 20);
+              n.targetY = pt.y + randomInt(-20, 20);
+            } else {
+              n.targetX = clamp(n.x + randomInt(-60, 60), 60, SCENES[n.scene].width - 60);
+              n.targetY = clamp(n.y + randomInt(-60, 60), 60, SCENES[n.scene].height - 60);
+            }
           }
         }
       }
@@ -2205,7 +2227,6 @@ export default function MartinGame() {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
         if (ballAnimRef.current.t >= 1) ballAnimRef.current = null;
       }
-
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
