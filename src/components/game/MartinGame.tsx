@@ -1811,8 +1811,9 @@ export default function MartinGame() {
         // Engine start with W when stopped
         if (!car.engineRunning && k.up && car.gas > 0) {
           car.engineRunning = true;
+          if (car.gear === 0) car.gear = 1; // auto-shift to 1st
           sound.play("engineStart");
-          showToast("🚗 Engine started!");
+          showToast("🚗 Engine started! Gear 1");
         }
 
         // Engine off in neutral when stopped
@@ -2748,11 +2749,14 @@ function render(
   }
 
   // Draw car on outside
-  if (scene.id === "outside" && !car.inCar) {
+  if (scene.id === "outside") {
     drawCar(ctx, car);
   }
 
-  drawMartin(ctx, m, eatTimer > 0, stats.hunger, stats.chud);
+  // Draw Martin (hidden when in car)
+  if (!car.inCar) {
+    drawMartin(ctx, m, eatTimer > 0, stats.hunger, stats.chud);
+  }
 
   if (scene.id === "hell") {
     if (hellBoss) {
