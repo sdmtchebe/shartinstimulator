@@ -2312,7 +2312,7 @@ export default function MartinGame() {
         }
       }
 
-      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current);
+      render(ctx, canvas, scene, m, npcs, stats, eatTimerRef.current, shadowChudRef.current, ballAnimRef.current, flightAnimRef.current, hellBossRef.current, hellProjectilesRef.current, hellPickupsRef.current, greaseProjectilesRef.current, hellWelcomeRef.current);
       eatTimerRef.current = Math.max(0, eatTimerRef.current - dt);
       if (ballAnimRef.current) {
         ballAnimRef.current.t += dt / 800; // 800ms full arc
@@ -2488,6 +2488,7 @@ function render(
   hellProjectiles: { x: number; y: number; vx: number; vy: number; damage: number; active: boolean; emoji: string }[],
   hellPickups: { x: number; y: number; type: "gun" | "food"; active: boolean; timer: number; lifetime: number }[],
   greaseProjectiles: { x: number; y: number; vx: number; vy: number; active: boolean }[],
+  hellWelcomeTimer: number,
 ) {
   const w = canvas.clientWidth; const h = canvas.clientHeight;
   const shakeX = (Math.random() - 0.5) * stats.shake;
@@ -2679,8 +2680,8 @@ function render(
     ctx.fillText(`CHARLE THE COLOSSUS ${Math.ceil(hellBoss.hp)}/${hellBoss.hpMax}`, w / 2, by - 4);
 
     // Welcome text
-    if (hellWelcomeRef.current > 0) {
-      const alpha = Math.min(1, hellWelcomeRef.current / 1000);
+    if (hellWelcomeTimer > 0) {
+      const alpha = Math.min(1, hellWelcomeTimer / 1000);
       ctx.fillStyle = `rgba(255, 180, 40, ${alpha})`;
       ctx.font = "bold 14px 'Press Start 2P', monospace"; ctx.textAlign = "center";
       ctx.fillText("Welcome to Hell!", w / 2, h / 2 - 40);
