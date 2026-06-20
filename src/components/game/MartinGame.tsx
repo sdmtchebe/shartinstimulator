@@ -150,7 +150,7 @@ export default function MartinGame() {
   const greaseCdRef = useRef(0);
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
-  const carRef = useRef<CarState>({ x: 400, y: 120, angle: Math.PI / 2, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: 0, rpm: 0, scene: "garage" });
+  const carRef = useRef<CarState>({ x: 400, y: 120, angle: Math.PI / 2, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: Math.PI / 2, rpm: 0, scene: "garage" });
   const garageDoorOpen = useRef(false);
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
@@ -1454,7 +1454,7 @@ export default function MartinGame() {
           car.scene = "garage";
           if (car.inCar) {
             car.inCar = false;
-            car.x = 400; car.y = 120; car.angle = Math.PI / 2;
+            car.x = 400; car.y = 120; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
             car.speed = 0; car.gear = 0; car.engineRunning = false;
             moveToScene("garage", d.targetPos.x, d.targetPos.y);
             showToast("🚗 Parked in garage");
@@ -1973,7 +1973,7 @@ export default function MartinGame() {
                 car.speed *= -0.5;
               } else {
               car.scene = "garage";
-              car.x = 400; car.y = 120; car.angle = Math.PI / 2;
+              car.x = 400; car.y = 120; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
                 car.speed = 0; car.gear = 0; car.engineRunning = false;
                 car.inCar = false;
                 m.scene = "garage"; m.x = car.x; m.y = car.y;
