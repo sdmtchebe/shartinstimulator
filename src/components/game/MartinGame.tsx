@@ -54,6 +54,7 @@ function makeNpcs(): NpcRuntime[] {
     ballVX: 0, ballVY: 0,
     anger: 0, hp: 50,
     asleep: false, stalking: false, pickpocketCd: 0,
+    enteringBuilding: false, buildingTimer: 0, buildingExitX: 0, buildingExitY: 0,
   }));
 }
 
@@ -1958,6 +1959,42 @@ export default function MartinGame() {
           n.speechBubble = null;
           n.speechTimer = 0;
           continue;
+        }
+
+        // Building enter/exit behavior
+        if (n.enteringBuilding) {
+          n.buildingTimer -= dt;
+          if (n.buildingTimer <= 0) {
+            n.enteringBuilding = false;
+            n.scene = "outside";
+            n.x = n.buildingExitX;
+            n.y = n.buildingExitY;
+            n.targetX = n.buildingExitX + randomInt(-80, 80);
+            n.targetY = n.buildingExitY + randomInt(-80, 80);
+            n.targetX = clamp(n.targetX, 60, SCENES.outside.width - 60);
+            n.targetY = clamp(n.targetY, 60, SCENES.outside.height - 60);
+          }
+          continue;
+        }
+        if (n.scene === "outside" && Math.random() < 0.0003 * dt) {
+          const doors = SCENES.outside.doors;
+          for (const d of doors) {
+            if (d.targetScene === "apartments" || d.targetScene === "home") continue;
+            if (dist(n.x, n.y, d.x + d.w / 2, d.y + d.h / 2) < 60) {
+              n.enteringBuilding = true;
+              n.buildingTimer = 3000 + Math.random() * 4000;
+              n.buildingExitX = d.x + d.w / 2;
+              n.buildingExitY = d.y + d.h / 2 + 40;
+              n.scene = d.targetScene as SceneId;
+              const spawn = SCENES[d.targetScene]?.spawnPos ?? { x: 400, y: 580 };
+              n.x = spawn.x + randomInt(-40, 40);
+              n.y = spawn.y + randomInt(-40, 40);
+              n.targetX = n.x;
+              n.targetY = n.y;
+              break;
+            }
+          }
+          if (n.enteringBuilding) continue;
         }
 
         // Soccer behavior

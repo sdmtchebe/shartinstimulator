@@ -233,9 +233,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "happy",
     specialAction: { label: "Challenge to HORSE ($10 bet)", emoji: "🏀" },
     schedule: [
-      { startHour: 10, endHour: 14, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
-      { startHour: 14, endHour: 16, scene: "outside", activity: "wander", targetX: 1500, targetY: 530 },
-      { startHour: 16, endHour: 18.83, scene: "court", activity: "wander", targetX: 460, targetY: 300 },
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 1500, targetY: 530 },
       { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
@@ -412,9 +410,7 @@ export const NPC_DEFS: NpcDef[] = [
     defaultMood: "sad",
     specialAction: { label: "Fish together (doubles catch chance)", emoji: "🎣" },
     schedule: [
-      { startHour: 10, endHour: 14, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
-      { startHour: 14, endHour: 16, scene: "outside", activity: "wander", targetX: 850, targetY: 1920 },
-      { startHour: 16, endHour: 18.83, scene: "fishing", activity: "wander", targetX: 420, targetY: 280 },
+      { startHour: 10, endHour: 18.83, scene: "outside", activity: "wander", targetX: 850, targetY: 1920 },
       { startHour: 18.83, endHour: 10, scene: "apartments", activity: "static" },
     ],
   },
@@ -563,8 +559,8 @@ export const SCENES: Record<string, SceneDef> = {
       { x: 1920, y: 1700, w: 260, h: 200, color: "#605030", label: "MoggMcCrackeggayla Boutique" },
       // Airport — top left corner
       { x: 50, y: 50, w: 300, h: 220, color: "#4a5a6a", label: "Martin Int'l Airport" },
-      // NPC Apartments — between airport and tutorat
-      { x: 580, y: 50, w: 300, h: 220, color: "#6a4a3a", label: "NPC Apartments" },
+      // NPC Apartments — top right corner
+      { x: 2400, y: 50, w: 300, h: 220, color: "#6a4a3a", label: "NPC Apartments" },
     ],
     doors: [
       { id: "d-home", x: 410, y: 470, w: 60, h: 30, targetScene: "home", targetPos: { x: 420, y: 580 }, label: "Home", color: COLORS.doorway },
@@ -581,11 +577,11 @@ export const SCENES: Record<string, SceneDef> = {
       { id: "d-fish", x: 830, y: 1880, w: 60, h: 30, targetScene: "fishing", targetPos: { x: 400, y: 580 }, label: "Fishing", color: "#80c0ff" },
       { id: "d-boutique", x: 2030, y: 1880, w: 60, h: 30, targetScene: "boutique", targetPos: { x: 400, y: 580 }, label: "Boutique", color: "#d4a574" },
       { id: "d-airport", x: 200, y: 250, w: 60, h: 30, targetScene: "airport", targetPos: { x: 500, y: 580 }, label: "Airport", color: "#a0b0c0" },
-      { id: "d-apartments", x: 700, y: 250, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "NPC Apts (Private)", color: "#8a6a4a" },
+      { id: "d-apartments", x: 2520, y: 250, w: 60, h: 30, targetScene: "apartments", targetPos: { x: 500, y: 580 }, label: "NPC Apts (Private)", color: "#8a6a4a" },
     ],
     buildings: [
       { x: 250, y: 280, w: 360, h: 220, label: "Martin's House" },
-      { x: 580, y: 50, w: 300, h: 220, label: "NPC Apartments" },
+      { x: 2400, y: 50, w: 300, h: 220, label: "NPC Apartments" },
       { x: 900, y: 250, w: 320, h: 240, label: "Tutorat Center" },
       { x: 1380, y: 260, w: 360, h: 280, label: "Basketball Court" },
       { x: 1900, y: 260, w: 340, h: 280, label: "Fight Club" },
