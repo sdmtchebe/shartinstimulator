@@ -1467,7 +1467,7 @@ export default function MartinGame() {
         if (m.scene === "garage" && d.targetScene === "outside") {
           const car = carRef.current;
           car.scene = "outside";
-          car.x = 560; car.y = 600; car.angle = Math.PI / 2;
+          car.x = 560; car.y = 700; car.angle = Math.PI / 2;
           car.speed = 0; car.gear = 0; car.engineRunning = false;
           moveToScene(d.targetScene, d.targetPos.x, d.targetPos.y);
           return;
@@ -1983,9 +1983,8 @@ export default function MartinGame() {
             }
             if (d.targetScene === "outside" && car.scene === "garage") {
               car.scene = "outside";
-              car.x = 560; car.y = 600; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
+              car.x = 560; car.y = 700; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
               car.speed = 0; car.gear = 0; car.engineRunning = false;
-              car.inCar = false;
               m.scene = "outside"; m.x = car.x; m.y = car.y;
               triggerTransition();
               showToast("🚗 Drove out of garage");
