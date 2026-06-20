@@ -1359,16 +1359,21 @@ export default function MartinGame() {
     }
 
     // Gas station interaction
+    // Gas station — only refill when near the pump
     if (m.scene === "gas-station") {
-      if (statsRef.current.money >= 10) {
-        addMoney(-10);
-        car.gas = 100;
-        sound.play("coin");
-        showToast("⛽ Tank refilled! -$10");
-      } else {
-        showToast("⛽ Not enough money ($10 needed)");
+      const pump = SCENES["gas-station"].interactables.find(it => it.id === "gas-pump");
+      if (pump && m.x > pump.x - 50 && m.x < pump.x + pump.w + 50 && m.y > pump.y - 50 && m.y < pump.y + pump.h + 50) {
+        if (statsRef.current.money >= 10) {
+          addMoney(-10);
+          car.gas = 100;
+          sound.play("coin");
+          showToast("⛽ Tank refilled! -$10");
+        } else {
+          showToast("⛽ Not enough money ($10 needed)");
+        }
+        return;
       }
-      return;
+      // Fall through to normal door/interactable checks below
     }
 
     if (m.scene === "hell") {
