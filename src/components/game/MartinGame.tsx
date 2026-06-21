@@ -1879,9 +1879,11 @@ export default function MartinGame() {
         const accel = car.engineRunning && car.gas > 0 ? 0.12 * car.gear * (dt / 16) : 0;
         car.speed += accel;
 
-        // Friction / braking
-        if (!k.up && !k.down) car.speed *= 0.96;
-        if (k.down && car.gear === 0) car.speed *= 0.92;
+        // Friction / braking - natural slowdown when not accelerating
+        if (!k.up && !k.down) car.speed *= 0.94;
+        if (k.down && car.gear === 0) car.speed *= 0.90;
+        // Additional friction when in gear but not accelerating
+        if (car.gear !== 0 && !k.up && Math.abs(car.speed) > 0.2) car.speed *= 0.97;
 
         // Speed limits per gear
         const maxSpd = car.gear > 0 ? car.gear * 3 : car.gear === -1 ? -1.5 : 0;
@@ -1915,18 +1917,23 @@ export default function MartinGame() {
             const cx2 = clamp(car.x, w.x, w.x + w.w);
             const cy2 = clamp(car.y, w.y, w.y + w.h);
             const cdx = car.x - cx2; const cdy = car.y - cy2;
-            if (cdx * cdx + cdy * cdy < 900) {
+            const distSq = cdx * cdx + cdy * cdy;
+            if (distSq < 1200) { // Increased collision radius for better detection
               let nearDoor = false;
               for (const d of SCENES[car.scene].doors) {
-                if (Math.abs(d.x + d.w/2 - cx2) < d.w/2 + 20 && Math.abs(d.y + d.h/2 - cy2) < d.h/2 + 20) {
+                if (Math.abs(d.x + d.w/2 - cx2) < d.w/2 + 40 && Math.abs(d.y + d.h/2 - cy2) < d.h/2 + 40) {
                   nearDoor = true; break;
                 }
               }
               if (nearDoor) continue;
               const pa = Math.atan2(cdy, cdx);
-              car.x = cx2 + Math.cos(pa) * 31;
-              car.y = cy2 + Math.sin(pa) * 31;
-              car.speed *= -0.5;
+              // Push car further away from wall to prevent sticking
+              const pushDist = 35 + Math.abs(car.speed) * 2;
+              car.x = cx2 + Math.cos(pa) * pushDist;
+              car.y = cy2 + Math.sin(pa) * pushDist;
+              // Stronger bounce with more friction to stop completely
+              car.speed *= -0.3;
+              car.driftAngle = car.angle; // Reset drift on impact
               stats.shake = Math.min(8, Math.abs(car.speed) * 2);
               sound.play("carBounce");
             }
