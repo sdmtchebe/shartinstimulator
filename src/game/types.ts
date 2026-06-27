@@ -144,6 +144,9 @@ export interface NpcRuntime {
   ballVY?: number;
   anger?: number;
   hp?: number;
+  flungVx?: number;    // velocity when launched by a car hit
+  flungVy?: number;
+  flungTimer?: number; // ticks remaining before NPC resumes normal AI
   asleep?: boolean;
   stalking?: boolean;
   pickpocketCd?: number;
@@ -165,6 +168,9 @@ export interface CarState {
   driftAngle: number;
   rpm: number;
   scene: SceneId;
+  hp: number;        // 0-hpMax; crashes and NPC collisions deduct HP
+  hpMax: number;
+  braking: boolean;  // true while player holds the brake key
 }
 
 export interface Quest { id: string; label: string; }

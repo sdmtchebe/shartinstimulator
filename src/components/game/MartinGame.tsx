@@ -150,7 +150,7 @@ export default function MartinGame() {
   const greaseCdRef = useRef(0);
   const hellWelcomeRef = useRef(0);
   const greaseProjectilesRef = useRef<{ x: number; y: number; vx: number; vy: number; active: boolean }[]>([]);
-  const carRef = useRef<CarState>({ x: 400, y: 120, angle: Math.PI / 2, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: Math.PI / 2, rpm: 0, scene: "garage" });
+  const carRef = useRef<CarState>({ x: 400, y: 120, angle: Math.PI / 2, speed: 0, gear: 0, gas: 100, headlights: false, engineRunning: false, inCar: false, steerAngle: 0, driftAngle: Math.PI / 2, rpm: 0, scene: "garage", hp: 100, hpMax: 100, braking: false });
   const garageDoorOpen = useRef(false);
   const gunSpawnCdRef = useRef(0);
   const foodSpawnCdRef = useRef(0);
@@ -1345,7 +1345,11 @@ export default function MartinGame() {
     if ((m.scene === "outside" || m.scene === "garage") && !car.inCar && dist(m.x, m.y, car.x, car.y) < 60) {
       car.inCar = true;
       car.gear = 0;
-      showToast("🚗 Hold W to start engine & drive • G: garage door • E: exit car");
+      showToast("🚗 Press [SPACE] or [W] to start engine • G: garage door • E: exit (after start)");
+      return;
+    }
+    // Suppress other interactions while sitting in the car with the engine off
+    if (car.inCar && !car.engineRunning) {
       return;
     }
     if (car.inCar) {
@@ -1354,6 +1358,7 @@ export default function MartinGame() {
       car.speed = 0;
       car.gear = 0;
       car.steerAngle = 0;
+      car.braking = false;
       m.x = car.x + Math.cos(car.angle + Math.PI / 2) * 40;
       m.y = car.y + Math.sin(car.angle + Math.PI / 2) * 40;
       showToast("Exited car");
@@ -1861,12 +1866,12 @@ export default function MartinGame() {
         if (k.neutral && car.gear !== 0) { car.gear = 0; showToast("⚙️ Neutral"); }
         if (k.headlights) { car.headlights = !car.headlights; showToast(car.headlights ? "🔦 Headlights ON" : "🔦 Headlights OFF"); }
 
-        // Engine start with W when stopped
-        if (!car.engineRunning && k.up && car.gas > 0) {
+        // Engine start with SPACE or W when stopped
+        if (!car.engineRunning && (k.up || k.interact) && car.gas > 0) {
           car.engineRunning = true;
           if (car.gear === 0) car.gear = 1; // auto-shift to 1st
           sound.play("engineStart");
-          showToast("🚗 Engine started! Gear 1");
+          showToast("🚗 Engine started. [W]=gas • [S]=brake • [A/D]=steer • [R]=reverse • [N]=neutral • [H]=lights");
         }
 
         // Engine off in neutral when stopped
@@ -1878,9 +1883,16 @@ export default function MartinGame() {
         const accel = car.engineRunning && car.gas > 0 ? 0.12 * car.gear * (dt / 16) : 0;
         car.speed += accel;
 
-        // Friction / braking
-        if (!k.up && !k.down) car.speed *= 0.96;
-        if (k.down && car.gear === 0) car.speed *= 0.92;
+        // Friction / braking — dedicated brake works in any gear
+        const isBraking = k.down;
+        car.braking = isBraking && Math.abs(car.speed) > 0.1 && car.engineRunning;
+        if (isBraking && car.engineRunning && Math.abs(car.speed) > 0.05) {
+          car.speed *= 0.84; // strong brake — works in forward AND reverse
+        } else if (!k.up && car.gear !== 0) {
+          car.speed *= 0.97; // engine coast
+        } else if (!k.up && !isBraking && car.gear === 0) {
+          car.speed *= 0.94; // neutral roll
+        }
 
         // Speed limits per gear
         const maxSpd = car.gear > 0 ? car.gear * 3 : car.gear === -1 ? -1.5 : 0;
@@ -1925,36 +1937,61 @@ export default function MartinGame() {
               const pa = Math.atan2(cdy, cdx);
               car.x = cx2 + Math.cos(pa) * 31;
               car.y = cy2 + Math.sin(pa) * 31;
-              car.speed *= -0.5;
-              stats.shake = Math.min(8, Math.abs(car.speed) * 2);
-              sound.play("thud");
-              showToast(`💥 CRASH!`);
+              const spd = Math.abs(car.speed);
+              const dmg = spd > 4 ? 35 : spd > 2 ? 18 : spd > 0.8 ? 8 : 0;
+              if (dmg > 0) {
+                car.hp = Math.max(0, car.hp - dmg);
+                if (car.hp <= 0) {
+                  showToast(`💥 CAR WRECKED! Martin stumbles out, ashamed.`);
+                  car.engineRunning = false; car.speed = 0; car.inCar = false;
+                  car.hp = car.hpMax; car.gear = 0; car.braking = false;
+                  m.x = car.x; m.y = car.y;
+                } else {
+                  showToast(`💥 CRASH! Car HP -${dmg} (${car.hp}/${car.hpMax})`);
+                }
+                sound.play("thud");
+                stats.shake = Math.min(14, spd * 3);
+              }
+              // Tight bounce — not the bouncy-castle feel of -0.5
+              car.speed *= dmg > 0 ? -0.15 : -0.4;
             }
           }
         }
 
-        // NPC collision — fling NPCs backward
-        if (Math.abs(car.speed) > 0.8) {
+        // NPC collision — hit with momentum. NPC takes HP damage, flies; car takes damage
+        if (Math.abs(car.speed) > 0.5) {
           for (const n of npcsRef.current) {
             if (n.scene !== "outside" || n.transformed) continue;
+            if (n.flungTimer && n.flungTimer > 0) continue; // already flying
             const npcDist = dist(car.x, car.y, n.x, n.y);
-            if (npcDist < 45) {
+            if (npcDist < 50) {
               const angle = Math.atan2(n.y - car.y, n.x - car.x);
-              const force = Math.abs(car.speed) * 15;
-              n.x += Math.cos(angle) * force;
-              n.y += Math.sin(angle) * force;
-              n.x = clamp(n.x, 60, SCENES.outside.width - 60);
-              n.y = clamp(n.y, 60, SCENES.outside.height - 60);
-              n.targetX = n.x; n.targetY = n.y;
-              n.reactionEmoji = "😱";
-              n.reactionTimer = 2000;
+              const spd = Math.abs(car.speed);
+              const carDmg = spd > 4 ? 18 : spd > 2 ? 9 : 3;
+              car.hp = Math.max(0, car.hp - carDmg);
+              const npcDmg = spd > 3 ? 30 : spd > 1.5 ? 15 : 5;
+              const npcHp = (n.hp ?? 50) - npcDmg;
+              n.hp = Math.max(0, npcHp);
+              // Launch NPC: give it velocity, mark as "flung" for ~0.3s
+              n.flungVx = Math.cos(angle) * spd * 6;
+              n.flungVy = Math.sin(angle) * spd * 6;
+              n.flungTimer = 18;
+              n.reactionEmoji = spd > 3 ? "💀" : "😱";
+              n.reactionTimer = 2500;
               n.emotion = "shocked";
-              n.emotionTimer = 2000;
-              n.friendship = Math.max(0, n.friendship - 15);
-              stats.shake = 4;
-              sound.play("punch");
-              showToast(`💥 Hit ${n.def.name}! Bounced off the car!`);
-              car.speed *= 0.7;
+              n.emotionTimer = 2500;
+              n.friendship = Math.max(0, n.friendship - (spd > 3 ? 25 : 12));
+              stats.shake = Math.min(12, spd * 2.5);
+              sound.play(spd > 3 ? "punch" : "thud");
+              if (npcHp <= 0) showToast(`💀 Hit ${n.def.name} — K.O.'d! (Car -${carDmg} HP)`);
+              else showToast(`💥 Hit ${n.def.name}! NPC -${npcDmg} HP / Car -${carDmg} HP`);
+              car.speed *= 0.45;
+              if (car.hp <= 0) {
+                showToast(`💥 CAR WRECKED! Martin jumps out.`);
+                car.engineRunning = false; car.speed = 0; car.inCar = false;
+                car.hp = car.hpMax; car.gear = 0; car.braking = false;
+                m.x = car.x; m.y = car.y;
+              }
               break;
             }
           }
@@ -2214,6 +2251,21 @@ export default function MartinGame() {
         if (n.speechTimer > 0) { n.speechTimer -= dt; if (n.speechTimer <= 0) n.speechBubble = null; }
         if (n.emotionTimer > 0) { n.emotionTimer -= dt; if (n.emotionTimer <= 0) n.emotion = n.def.defaultMood ?? "neutral"; }
         if (n.transformed) continue;
+        // Flung state — physics overrides AI for the duration of the launch
+        if (n.flungTimer && n.flungTimer > 0) {
+          const sceneW = SCENES[n.scene].width;
+          const sceneH = SCENES[n.scene].height;
+          n.x += (n.flungVx ?? 0);
+          n.y += (n.flungVy ?? 0);
+          n.x = clamp(n.x, 60, sceneW - 60);
+          n.y = clamp(n.y, 60, sceneH - 60);
+          n.flungTimer -= 1;
+          if (n.flungTimer <= 0) {
+            n.flungVx = undefined; n.flungVy = undefined; n.flungTimer = undefined;
+            n.targetX = n.x; n.targetY = n.y;
+          }
+          continue;
+        }
         n.activityTimer -= dt;
 
         const entry = getCurrentScheduleEntry(n, currentHour);
