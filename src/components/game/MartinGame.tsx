@@ -2757,44 +2757,119 @@ export default function MartinGame() {
         </div>
       )}
 
-      {/* Car HUD when in car */}
+      {/* =========== CAR DRIVING HUD (upgraded) =========== */}
       {!showStart && carRef.current.inCar && (
         <div className="absolute inset-0 pointer-events-none z-20">
-          {/* Gear / Speed / Gas display */}
-          <div className="absolute bottom-16 left-3 bg-black/80 border border-primary/40 rounded px-4 py-3 pixel-text text-[9px]">
-            <div className="flex gap-4 mb-2">
-              <span className="text-primary">Gear: {carRef.current.gear === 0 ? "N" : carRef.current.gear === -1 ? "R" : carRef.current.gear}</span>
-              <span className="text-foreground">{Math.abs(Math.round(carRef.current.speed * 20))} km/h</span>
-              <span className={carRef.current.headlights ? "text-yellow-400" : "text-muted-foreground"}>🔦 {carRef.current.headlights ? "ON" : "OFF"}</span>
-            </div>
-            <div className="flex gap-3 items-center mb-1">
-              <span className="text-accent">⛽ {Math.round(carRef.current.gas)}%</span>
-              <div className="w-20 h-2 bg-secondary rounded overflow-hidden">
-                <div className={`h-full ${carRef.current.gas > 20 ? "bg-accent" : "bg-destructive"} transition-all`} style={{ width: `${carRef.current.gas}%` }} />
+
+          {/* 1) Always-on top-center banner: 'Press SPACE to start engine' — visible WHENEVER engine is off */}
+          {!carRef.current.engineRunning && (
+            <div className="absolute top-20 left-1/2 -translate-x-1/2">
+              <div className="bg-black/85 border-2 border-yellow-400 rounded-lg px-6 py-3 pixel-text text-[14px] text-yellow-300 shadow-lg shadow-yellow-400/30 animate-pulse text-center">
+                🚗 Press <span className="bg-yellow-400 text-black px-2 py-0.5 rounded font-bold">SPACE</span> or <span className="bg-yellow-400 text-black px-2 py-0.5 rounded font-bold">W</span> to start the engine
               </div>
             </div>
-            <div className="text-[7px] text-muted-foreground mt-1">
-              1-4: gears • R: reverse • N: neutral • H: lights • W: accel • E: exit
+          )}
+
+          {/* 2) TOP-LEFT: Engine status pill + Brake light indicator (clear gas-vs-brake feedback) */}
+          <div className="absolute top-3 left-3 pixel-text text-[10px] flex flex-col gap-2">
+            <div className={"px-3 py-1.5 rounded border-2 " + (carRef.current.engineRunning
+              ? "bg-green-900/80 border-green-400 text-green-300"
+              : "bg-red-900/80 border-red-400 text-red-300 animate-pulse")}>
+              {carRef.current.engineRunning ? "⚙️ ENGINE: ON" : "⚙️ ENGINE: OFF"}
+            </div>
+            <div className={"px-3 py-1.5 rounded border-2 " + (carRef.current.braking
+              ? "bg-red-600/90 border-red-300 text-white animate-pulse"
+              : "bg-black/70 border-gray-600 text-gray-500")}>
+              {carRef.current.braking ? "🛑 BRAKE: ACTIVE" : "🛑 BRAKE: OFF"}
             </div>
           </div>
-          {/* Steering wheel */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
-            <svg width="80" height="80" viewBox="-40 -40 80 80">
-              <circle cx="0" cy="0" r="35" fill="none" stroke="#8B7355" strokeWidth="6" />
-              <circle cx="0" cy="0" r="30" fill="none" stroke="#6B5335" strokeWidth="2" />
-              <line x1="0" y1="0" x2={Math.sin(carRef.current.steerAngle) * 25} y2={-Math.cos(carRef.current.steerAngle) * 25}
-                stroke="#ddd" strokeWidth="3" strokeLinecap="round" />
-              <circle cx="0" cy="0" r="5" fill="#555" />
-              <text x="0" y="1" textAnchor="middle" dominantBaseline="middle" fill="#999" fontSize="4" fontFamily="monospace">Z</text>
-            </svg>
+
+          {/* 3) TOP-RIGHT: Car HP bar + Fuel bar (pleasant gradients) */}
+          <div className="absolute top-3 right-3 pixel-text text-[10px] flex flex-col gap-2 w-52">
+            <div className="bg-black/85 border border-red-500/60 rounded px-2.5 py-1.5">
+              <div className="flex justify-between mb-1 text-red-300">
+                <span>🚗 CAR HP</span>
+                <span>{carRef.current.hp}/{carRef.current.hpMax}</span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all"
+                  style={{ width: `${(carRef.current.hp / carRef.current.hpMax) * 100}%` }} />
+              </div>
+            </div>
+            <div className="bg-black/85 border border-amber-500/60 rounded px-2.5 py-1.5">
+              <div className="flex justify-between mb-1 text-amber-300">
+                <span>⛽ FUEL</span>
+                <span>{Math.round(carRef.current.gas)}%</span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded overflow-hidden">
+                <div className={"h-full transition-all " + (carRef.current.gas > 20
+                  ? "bg-gradient-to-r from-amber-500 to-yellow-300"
+                  : "bg-red-500 animate-pulse")}
+                  style={{ width: `${carRef.current.gas}%` }} />
+              </div>
+            </div>
+            <div className="bg-black/85 border border-primary/50 rounded px-2.5 py-1.5 text-[9px] flex items-center justify-between">
+              <span className={carRef.current.headlights ? "text-yellow-300" : "text-muted-foreground"}>
+                🔦 {carRef.current.headlights ? "LIGHTS: ON" : "LIGHTS: OFF"}
+              </span>
+              <span className="text-muted-foreground">[H]</span>
+            </div>
           </div>
-          {/* E to exit prompt */}
-          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 bg-black/60 rounded px-3 py-1 pixel-text text-[8px] text-muted-foreground">
-            Press E to exit car
+
+          {/* 4) BOTTOM-RIGHT: Speed gauge ring + speed number + gear pill */}
+          <div className="absolute bottom-4 right-3 pixel-text text-[10px]">
+            <div className="relative bg-black/85 border-2 border-primary/60 rounded-full w-36 h-36 flex items-center justify-center shadow-lg shadow-primary/30">
+              <svg className="absolute inset-0" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="6" />
+                <circle cx="50" cy="50" r="42" fill="none"
+                  stroke={carRef.current.braking ? "#ef4444" : Math.abs(carRef.current.speed) > 8 ? "#f59e0b" : "#22c55e"}
+                  strokeWidth="6" strokeLinecap="round"
+                  strokeDasharray={`${(Math.min(Math.abs(carRef.current.speed), 12) / 12) * 264} 264`}
+                  transform="rotate(-90 50 50)" />
+              </svg>
+              <div className="text-center z-10">
+                <div className="text-4xl font-bold text-white tabular-nums leading-none">
+                  {Math.abs(Math.round(carRef.current.speed * 20))}
+                </div>
+                <div className="text-[8px] text-muted-foreground mt-0.5">km/h</div>
+                <div className={"mt-1.5 inline-block px-2 py-0.5 rounded text-[9px] font-bold " + (
+                  carRef.current.gear > 0 ? "bg-primary text-primary-foreground"
+                  : carRef.current.gear === -1 ? "bg-destructive text-destructive-foreground"
+                  : "bg-muted text-muted-foreground"
+                )}>
+                  {carRef.current.gear === 0 ? "NEUTRAL" : carRef.current.gear === -1 ? "REVERSE" : `GEAR ${carRef.current.gear}`}
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* 5) BOTTOM-LEFT: Keyboard controls legend — always visible while in car */}
+          <div className="absolute bottom-3 left-3 pixel-text text-[9px] bg-black/85 border border-primary/40 rounded-lg px-3 py-2.5 max-w-xs backdrop-blur-sm">
+            <div className="text-primary font-bold mb-1.5 text-[10px] flex items-center gap-2">
+              <span>🚗 KEYBOARD CONTROLS</span>
+              <span className="text-[8px] text-muted-foreground normal-case font-normal">in-car mode</span>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-foreground">
+              <div><span className="bg-green-600 text-white px-1.5 py-0.5 rounded font-bold mr-1">W</span>Gas ⬆</div>
+              <div><span className="bg-red-600 text-white px-1.5 py-0.5 rounded font-bold mr-1">S</span>Brake ⬇</div>
+              <div><span className="bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold mr-1">A</span>Steer ⬅</div>
+              <div><span className="bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold mr-1">D</span>Steer ➡</div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-foreground mt-1.5">
+              <div><span className="bg-gray-700 text-white px-1.5 py-0.5 rounded font-bold mr-1">R</span>Reverse</div>
+              <div><span className="bg-gray-700 text-white px-1.5 py-0.5 rounded font-bold mr-1">N</span>Neutral</div>
+              <div><span className="bg-gray-700 text-white px-1.5 py-0.5 rounded font-bold mr-1">H</span>Lights</div>
+              <div><span className="bg-yellow-500 text-black px-1.5 py-0.5 rounded font-bold mr-1">E</span>Exit</div>
+            </div>
+            <div className="mt-2 pt-1.5 border-t border-primary/20 text-[8px]">
+              {carRef.current.engineRunning
+                ? <span className="text-green-400">✓ Engine running — drive!</span>
+                : <span className="text-yellow-300 animate-pulse">⚠ Engine OFF — press SPACE or W to start</span>}
+            </div>
+          </div>
+
         </div>
       )}
-
       {showStart && <StartScreen hasSave={hasSave()} onContinue={() => startGame(false)} onNewGame={() => startGame(true)} />}
     </div>
   );
