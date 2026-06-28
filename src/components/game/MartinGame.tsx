@@ -2020,14 +2020,8 @@ export default function MartinGame() {
             }
             if (d.targetScene === "outside" && car.scene === "garage") {
               car.scene = "outside";
-              // Spawn car ON the road (y=700). Previously spawned at y=530 which was INSIDE the
-              // house exterior wall overlay — that bricked Martin because his collision check
-              // overlapped the wall and he couldn't move in any direction.
               car.x = 560; car.y = 700; car.angle = Math.PI / 2; car.driftAngle = Math.PI / 2;
-              car.speed = 0; car.gear = 0; car.engineRunning = false;
-              car.inCar = false;
-              // Spawn Martin at the door's TARGET position (400,500) — outside the garage, on the
-              // path. Used to spawn him on top of the car at (560,530) which lands him inside the wall.
+              car.speed = 0; car.gear = 0;
               m.scene = "outside"; m.x = d.targetPos.x; m.y = d.targetPos.y;
               triggerTransition();
               showToast("🚗 Drove out of garage");
